@@ -1,0 +1,21 @@
+{
+  "name": "warframe-relics",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@wfcd/items": "^1.1274.44",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1"
+  }
+}

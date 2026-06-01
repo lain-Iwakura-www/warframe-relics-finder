@@ -1,0 +1,85 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; padding: 20px; }
+.container { max-width: 900px; margin: 0 auto; }
+h1 { text-align: center; margin-bottom: 30px; color: #e0b0ff; }
+.search-section { margin-bottom: 30px; }
+.search-wrapper { position: relative; }
+#searchInput { width: 100%; padding: 12px 15px; font-size: 16px; border: 2px solid #444; border-radius: 6px; background: #16213e; color: #eee; outline: none; transition: border-color 0.3s; }
+#searchInput:focus { border-color: #e0b0ff; }
+#suggestions { position: absolute; top: 100%; left: 0; right: 0; background: #16213e; border: 1px solid #444; border-radius: 0 0 6px 6px; list-style: none; max-height: 300px; overflow-y: auto; display: none; z-index: 100; }
+#suggestions.visible { display: block; }
+#suggestions li { padding: 10px 15px; cursor: pointer; transition: background 0.2s; }
+#suggestions li:hover { background: #2a2a4a; color: #e0b0ff; }
+
+/* Блок результатов — изначально скрыт */
+#results {
+    display: none;
+}
+.results-section {
+    display: block;              /* будет показан, когда появится содержимое */
+    background: #16213e;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 100px;
+    margin-bottom: 30px;
+}
+
+.part-info, .set-info, .relic-info { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.part-info h2, .set-info h2, .relic-info h2 { margin: 0; }
+.wishlist-btn { background: #51cf66; color: #1a1a2e; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+.wishlist-btn:hover { background: #40b04a; }
+.wishlist-btn.remove { background: #d9534f; color: #fff; }
+.wishlist-btn.remove:hover { background: #c9302c; }
+.rarity-info { background: #2a2a4a; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.chances-summary { font-size: 0.9em; color: #ccc; }
+.ducats { font-weight: bold; color: #ffd700; margin-left: auto; }
+.filter-row { margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+.filter-row label { cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.filter-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #e0b0ff; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { padding: 10px 8px; border-bottom: 1px solid #2a2a4a; text-align: center; }
+th { background: #2a2a4a; color: #e0b0ff; font-weight: bold; }
+tr:hover td { background: #2a2a4a; }
+.vaulted { color: #ff6b6b; font-weight: bold; }
+.not-vaulted { color: #51cf66; }
+.wishlist-section { background: #16213e; border-radius: 8px; padding: 20px; }
+.wishlist-section h2 { color: #e0b0ff; margin-bottom: 15px; }
+#wishlist-items { list-style: none; }
+
+.wishlist-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px; margin: 2px 0; border-radius: 6px; background: #1e1e34; transition: background 0.2s;
+}
+.wishlist-item:hover { background: #252545; }
+.wishlist-item span { flex: 1; cursor: pointer; transition: color 0.2s; }
+.wishlist-item span:hover { color: #e0b0ff; }
+.wishlist-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #51cf66; }
+.wishlist-item .delete-btn {
+    background: none; border: none; color: #ff6b6b; font-size: 20px; cursor: pointer; padding: 0 5px; line-height: 1; transition: color 0.2s;
+}
+.wishlist-item .delete-btn:hover { color: #ff4444; }
+.obtained { text-decoration: line-through; opacity: 0.6; }
+
+.wishlist-set { margin: 5px 0; border-radius: 6px; background: #1e1e34; }
+.wishlist-set summary { display: flex; align-items: center; padding: 10px; cursor: pointer; list-style: none; border-radius: 6px; }
+.wishlist-set summary::-webkit-details-marker { display: none; }
+.wishlist-set summary:hover { background: #252545; }
+.wishlist-set-name { flex: 1; color: #e0b0ff; }
+.wishlist-set-btns { display: flex; gap: 5px; margin-left: 10px; }
+.wishlist-set-parts { list-style: none; padding: 0 10px 10px 20px; }
+.wishlist-set-btns .delete-btn {
+    background: none; border: none; color: #ff6b6b; font-size: 20px; cursor: pointer; padding: 0 5px; line-height: 1; transition: color 0.2s;
+}
+.wishlist-set-btns .delete-btn:hover { color: #ff4444; }
+
+.back-btn { background: none; border: 1px solid #444; color: #e0b0ff; padding: 6px 12px; border-radius: 4px; margin-bottom: 15px; cursor: pointer; transition: background 0.3s; }
+.back-btn:hover { background: #2a2a4a; }
+.relic-name { cursor: pointer; transition: color 0.2s, text-decoration 0.2s; }
+.relic-name:hover { color: #e0b0ff; text-decoration: underline; }
+.set-link { color: #e0b0ff; cursor: pointer; text-decoration: underline; text-decoration-style: dotted; transition: color 0.2s; }
+.set-link:hover { color: #cf8ff0; }
+.reward-part { cursor: pointer; transition: color 0.2s; }
+.reward-part:hover { color: #e0b0ff; }
+.part-link { color: #e0b0ff; cursor: pointer; text-decoration: underline; text-decoration-style: dotted; transition: color 0.2s; }
+.part-link:hover { color: #cf8ff0; }
+.set-table .part-link { color: #e0b0ff; }
+.platinum-price { color: #5cb8ff; font-weight: bold; }
