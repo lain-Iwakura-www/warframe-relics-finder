@@ -2,7 +2,7 @@ const express = require('express');
 const Items = require('@wfcd/items');
 
 const CONFIG = {
-    PORT: 3000,
+    PORT: process.env.PORT || 3000,
     MAX_LOAD_ATTEMPTS: 100,
     LOAD_INTERVAL_MS: 100,
     MIN_SEARCH_LENGTH: 3,
