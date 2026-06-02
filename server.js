@@ -19,14 +19,18 @@ let setIndex = new Map();
 let relicRewardsMap = new Map();
 
 const PART_SUFFIXES = [
+    // Основные
     'Blueprint', 'Neuroptics', 'Chassis', 'Systems',
+    // Оружие дальнего боя
     'Barrel', 'Receiver', 'Stock',
-    'Blade', 'Handle', 'Head', 'Grip', 'Link',
-    'Lower Limb', 'Upper Limb', 'Pod', 'String',
-    'Guard', 'Ornament', 'Stars', 'Collar', 'Band',
-    'Kavat', 'Mask', 'Tail', 'Wings', 'Core',
-    'Carapace', 'Cerebrum',
-    'Gauntlet', 'Disc', 'Pouch', 'Chain', 'Hilt',
+    // Оружие ближнего боя
+    'Blade', 'Blades', 'Handle', 'Head', 'Grip', 'Link', 'Gauntlet', 'Gauntlets',
+    'Disc', 'Discs', 'Pouch', 'Chain', 'Hilt', 'Guard', 'Ornament',
+    // Косметика и питомцы
+    'Lower Limb', 'Upper Limb', 'Pod', 'String', 'Stars', 'Collar', 'Band',
+    'Kavat', 'Mask', 'Tail', 'Wings', 'Core', 'Carapace', 'Cerebrum',
+    // Дополнительно
+    'Bow', 'Arrow', 'Quiver', 'Hilt', 'Guard',
 ];
 const MULTI_WORD_SUFFIXES = ['Lower Limb', 'Upper Limb'];
 
