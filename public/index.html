@@ -28,9 +28,14 @@
         </div>
         <footer>
             <p class="disclaimer"></p>
+            <p class="rarity-disclaimer"></p>
             <p>
                 <a href="https://www.warframe.com" target="_blank" rel="noopener">Official Warframe Site</a> |
                 <a href="https://github.com/YOUR_USERNAME/warframe-relics/issues" target="_blank" rel="noopener">Feedback & Issues</a>
+            </p>
+            <p class="resurgence-info">
+                <a href="https://www.warframe.com/prime-resurgence" target="_blank" rel="noopener" class="resurgence-link">Prime Resurgence</a> —
+                <span class="resurgence-description">During Prime Resurgence, Warframes can be obtained from Relics purchased for Aya.</span>
             </p>
             <div class="lang-switch">
                 <button id="btnEn" class="lang-btn active">EN</button>
@@ -48,7 +53,22 @@
         // Применить язык при загрузке
         applyLanguage();
         document.querySelector('.disclaimer').textContent = t('disclaimer');
+        document.querySelector('.rarity-disclaimer').textContent = t('rarityDisclaimer');
         document.getElementById('headerTitle').textContent = t('title');
+        // Обновим ссылку в зависимости от языка
+        function updateResurgenceLink() {
+            const link = document.querySelector('.resurgence-link');
+            if (link) {
+                link.href = currentLang === 'ru' ? 'https://www.warframe.com/ru/prime-resurgence' : 'https://www.warframe.com/prime-resurgence';
+            }
+        }
+        updateResurgenceLink();
+        // При смене языка также обновлять ссылку
+        const originalSetLanguage = setLanguage;
+        setLanguage = function(lang) {
+            originalSetLanguage(lang);
+            updateResurgenceLink();
+        };
     </script>
 </body>
 </html>

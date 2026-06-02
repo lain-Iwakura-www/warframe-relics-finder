@@ -51,6 +51,9 @@ const TRANSLATIONS = {
         allObtained: 'All parts obtained! Nothing to search.',
         bestRelicsTitle: '🎯 Best Relics for Your Missing Parts',
         findBest: 'Finding best relics...',
+        resurgenceLinkText: 'Prime Resurgence',
+        resurgenceDescription: 'During Prime Resurgence, Warframes can be obtained from Relics purchased for Aya.',
+        rarityDisclaimer: 'Rarity data sourced from @wfcd/items, may contain inaccuracies.',
     },
     ru: {
         title: 'Warframe Relic Finder',
@@ -89,7 +92,7 @@ const TRANSLATIONS = {
         exceptional: 'Необычная',
         flawless: 'Бесподобная',
         radiant: 'Сияющая',
-        owned: 'Получено',
+        owned: 'Выбито',
         delete: 'Удалить',
         deleteSet: 'Удалить набор',
         searchEnWiki: 'Искать на EN Wiki ↗',
@@ -104,6 +107,9 @@ const TRANSLATIONS = {
         allObtained: 'Все детали получены! Нечего искать.',
         bestRelicsTitle: '🎯 Лучшие реликвии для недостающих деталей',
         findBest: 'Поиск лучших реликвий...',
+        resurgenceLinkText: 'Возрождение Прайм',
+        resurgenceDescription: 'В рамках «Возрождения Прайм» варфреймы можно получить из Реликвий, купленных за Айю.',
+        rarityDisclaimer: 'Данные о редкости взяты из @wfcd/items и могут содержать неточности.',
     }
 };
 
@@ -117,13 +123,21 @@ function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('lang', lang);
     applyLanguage();
-    renderWishlist();           // обновить интерфейс списка
-    if (currentState) refreshCurrentPage(); // обновить текущий контент
+    renderWishlist();
+    if (currentState) refreshCurrentPage();
 }
 
 function applyLanguage() {
     document.title = t('title');
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
     document.querySelector('.wishlist-section h2').textContent = '📋 ' + t('wishlistTitle');
-    // Обновим флаги активного языка (если добавим)
+    // обновим также ссылки и дисклеймер в футере, если они уже загружены
+    const disclaimerEl = document.querySelector('.disclaimer');
+    if (disclaimerEl) disclaimerEl.textContent = t('disclaimer');
+    const rarityEl = document.querySelector('.rarity-disclaimer');
+    if (rarityEl) rarityEl.textContent = t('rarityDisclaimer');
+    const resurgenceLink = document.querySelector('.resurgence-link');
+    if (resurgenceLink) resurgenceLink.textContent = t('resurgenceLinkText');
+    const resurgenceDesc = document.querySelector('.resurgence-description');
+    if (resurgenceDesc) resurgenceDesc.textContent = t('resurgenceDescription');
 }
