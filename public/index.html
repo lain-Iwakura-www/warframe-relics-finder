@@ -8,26 +8,41 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔍 Warframe Relic Finder</h1>
+        <h1>🔍 <span id="headerTitle">Warframe Relic Finder</span></h1>
         <div class="search-section">
             <div class="search-wrapper">
-                <input type="text" id="searchInput" placeholder="Enter part name (min. 3 characters)...">
+                <input type="text" id="searchInput" placeholder="Enter part or relic name (min. 3 chars)...">
                 <ul id="suggestions"></ul>
             </div>
         </div>
-        <div id="results" class="results-section">
-            <!-- Results appear here -->
-        </div>
+        <div id="results" class="results-section"></div>
         <div id="wishlist-section" class="wishlist-section">
             <h2>📋 Wishlist</h2>
-             <div id="wishlist-actions"></div>
-             <ul id="wishlist-items"></ul>
+            <div id="wishlist-actions"></div>
+            <ul id="wishlist-items"></ul>
         </div>
         <footer>
-            <p>Warframe and all related content are trademarks of Digital Extremes. This is a fan-made project, not affiliated with DE.</p>
-            <p><a href="https://github.com/lain-Iwakura-www/warframe-relics-helper/issues" target="_blank" rel="noopener">Feedback & Issues</a></p>
+            <p class="disclaimer"></p>
+            <p>
+                <a href="https://www.warframe.com" target="_blank" rel="noopener">Official Warframe Site</a> |
+                <a href="https://github.com/YOUR_USERNAME/warframe-relics/issues" target="_blank" rel="noopener">Feedback & Issues</a>
+            </p>
+            <div class="lang-switch">
+                <button id="btnEn" class="lang-btn active">EN</button>
+                <button id="btnRu" class="lang-btn">RU</button>
+            </div>
         </footer>
     </div>
+    <script src="lang.js"></script>
     <script src="script.js"></script>
+    <script>
+        // Инициализация языка
+        document.getElementById('btnEn').addEventListener('click', () => setLanguage('en'));
+        document.getElementById('btnRu').addEventListener('click', () => setLanguage('ru'));
+        applyLanguage();
+        document.querySelector('.disclaimer').textContent = t('disclaimer');
+        // Обновим текст заголовка
+        document.getElementById('headerTitle').textContent = t('title');
+    </script>
 </body>
 </html>

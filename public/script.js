@@ -68,27 +68,27 @@ function renderWishlist() {
     wishlistActions.innerHTML = '';
     if (wishlist.length > 0) {
         const sortLabel = document.createElement('label');
-        sortLabel.textContent = 'Sort: ';
+        sortLabel.textContent = t('sort') + ' ';
         sortLabel.className = 'sort-label';
         const sortSelect = document.createElement('select');
         sortSelect.innerHTML = `
-            <option value="added" ${wishlistSort === 'added' ? 'selected' : ''}>Date added</option>
-            <option value="name" ${wishlistSort === 'name' ? 'selected' : ''}>Name</option>
-            <option value="obtained" ${wishlistSort === 'obtained' ? 'selected' : ''}>Owned status</option>`;
+            <option value="added" ${wishlistSort === 'added' ? 'selected' : ''}>${t('sortAdded')}</option>
+            <option value="name" ${wishlistSort === 'name' ? 'selected' : ''}>${t('sortName')}</option>
+            <option value="obtained" ${wishlistSort === 'obtained' ? 'selected' : ''}>${t('sortObtained')}</option>`;
         sortSelect.addEventListener('change', (e) => { wishlistSort = e.target.value; renderWishlist(); });
         sortLabel.appendChild(sortSelect);
         wishlistActions.appendChild(sortLabel);
 
         const bestRelicsBtn = document.createElement('button');
         bestRelicsBtn.id = 'findBestRelicsBtn';
-        bestRelicsBtn.textContent = '🔍 Find Best Relics';
+        bestRelicsBtn.textContent = t('findBestRelics');
         bestRelicsBtn.className = 'wishlist-btn';
         bestRelicsBtn.addEventListener('click', findBestRelics);
         wishlistActions.appendChild(bestRelicsBtn);
     }
 
     if (!wishlist.length) {
-        wishlistItems.innerHTML = '<li class="empty">Nothing added yet.</li>';
+        wishlistItems.innerHTML = `<li class="empty">${t('nothingAdded')}</li>`;
         return;
     }
 
@@ -99,14 +99,14 @@ function renderWishlist() {
             const li = document.createElement('li');
             li.className = 'wishlist-item';
             const cb = document.createElement('input');
-            cb.type = 'checkbox'; cb.checked = item.obtained; cb.title = 'Owned';
+            cb.type = 'checkbox'; cb.checked = item.obtained; cb.title = t('owned');
             cb.addEventListener('change', () => { item.obtained = cb.checked; syncPartObtained(item.name, item.obtained); renderWishlist(); });
             const span = document.createElement('span');
             span.textContent = item.name;
             if (item.obtained) span.classList.add('obtained');
             span.addEventListener('click', () => { searchInput.value = item.name; navigateTo({ type: 'part', name: item.name }); });
             const del = document.createElement('button');
-            del.className = 'delete-btn'; del.innerHTML = '×'; del.title = 'Remove';
+            del.className = 'delete-btn'; del.innerHTML = '×'; del.title = t('delete');
             del.addEventListener('click', (e) => { e.stopPropagation(); wishlist = wishlist.filter(i => i !== item); saveWishlist(wishlist); renderWishlist(); });
             li.appendChild(cb); li.appendChild(span); li.appendChild(del);
             wishlistItems.appendChild(li);
@@ -118,7 +118,7 @@ function renderWishlist() {
             const summary = document.createElement('summary');
             summary.innerHTML = `<span class="wishlist-set-name">📦 ${escapeHtml(item.name)}</span>`;
             const delSet = document.createElement('button');
-            delSet.className = 'delete-btn'; delSet.innerHTML = '×'; delSet.title = 'Remove set';
+            delSet.className = 'delete-btn'; delSet.innerHTML = '×'; delSet.title = t('deleteSet');
             delSet.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); wishlist = wishlist.filter(i => i !== item); saveWishlist(wishlist); renderWishlist(); });
             const btnWrap = document.createElement('span'); btnWrap.className = 'wishlist-set-btns'; btnWrap.appendChild(delSet);
             summary.appendChild(btnWrap);
@@ -129,7 +129,7 @@ function renderWishlist() {
                 const pli = document.createElement('li');
                 pli.className = 'wishlist-item';
                 const pcb = document.createElement('input');
-                pcb.type = 'checkbox'; pcb.checked = part.obtained; pcb.title = 'Owned';
+                pcb.type = 'checkbox'; pcb.checked = part.obtained; pcb.title = t('owned');
                 pcb.addEventListener('change', () => { part.obtained = pcb.checked; syncPartObtained(part.name, part.obtained); renderWishlist(); });
                 const pspan = document.createElement('span');
                 pspan.textContent = part.name;
@@ -173,26 +173,26 @@ async function findBestRelics() {
         else if (item.type === 'set') item.parts.forEach(p => { if (!p.obtained) partNames.push(p.name); });
     });
     const uniqueParts = [...new Set(partNames)];
-    if (!uniqueParts.length) { alert('All parts obtained!'); return; }
+    if (!uniqueParts.length) { alert(t('allObtained')); return; }
     resultsDiv.style.display = 'block';
-    resultsDiv.innerHTML = '<p>Finding best relics...</p>';
+    resultsDiv.innerHTML = `<p>${t('findBest')}</p>`;
     try {
         const resp = await fetch('/api/optimal-relics', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ parts: uniqueParts }) });
-        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">Error ${resp.status}</p>`; return; }
+        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">${t('error')} ${resp.status}</p>`; return; }
         const data = await resp.json();
-        if (!data.relics || data.relics.length === 0) { resultsDiv.innerHTML = '<p>No relics found.</p>'; return; }
+        if (!data.relics || data.relics.length === 0) { resultsDiv.innerHTML = `<p>${t('partNotFound')}</p>`; return; }
         renderBestRelics(data.relics);
-    } catch (err) { console.error(err); resultsDiv.innerHTML = '<p class="error">Network error.</p>'; }
+    } catch (err) { console.error(err); resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
 }
 
 function renderBestRelics(relics) {
     let html = '';
-    if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">← Back</button>`;
-    html += `<h2>🎯 Best Relics for Your Missing Parts</h2>`;
-    html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnlyBest"> Show available only</label></div>`;
-    html += `<table id="bestRelicsTable"><thead><tr><th>Relic</th><th>Status</th><th>Missing Parts</th><th>Count</th></tr></thead><tbody>`;
+    if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
+    html += `<h2>${t('bestRelicsTitle')}</h2>`;
+    html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnlyBest"> ${t('showAvailableOnly')}</label></div>`;
+    html += `<table id="bestRelicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th><th>${t('missingParts')}</th><th>${t('count')}</th></tr></thead><tbody>`;
     relics.forEach(r => {
-        const status = r.isResurgence ? 'Resurgence' : (r.isVaulted ? 'Vaulted' : 'Available');
+        const status = r.isResurgence ? t('resurgence') : (r.isVaulted ? t('vaulted') : t('available'));
         const cls = r.isResurgence ? 'not-vaulted' : (r.isVaulted ? 'vaulted' : 'not-vaulted');
         const rowCls = r.isVaulted && !r.isResurgence ? 'vaulted-row' : 'available-row';
         const safeParts = r.desiredParts.map(escapeHtml).join(', ');
@@ -262,23 +262,23 @@ function hideSuggestions() { suggestionsList.classList.remove('visible'); }
 
 // ================== SET PAGE ==================
 async function loadSetPage(setName) {
-    resultsDiv.innerHTML = '<p>Loading set...</p>';
+    resultsDiv.innerHTML = `<p>${t('loadingSet')}</p>`;
     try {
         const resp = await fetch(`${SETS_URL}?name=${encodeURIComponent(setName)}`);
-        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">Set not found</p>`; return; }
+        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">${t('setNotFound')}</p>`; return; }
         renderSetPage(await resp.json());
-    } catch (e) { resultsDiv.innerHTML = '<p class="error">Error</p>'; }
+    } catch (e) { resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
 }
 
 function renderSetPage(data) {
     const { setName, parts } = data;
     const inList = isSetInWishlist(setName);
-    const btnText = inList ? '❌ Remove set' : '➕ Add set';
+    const btnText = inList ? t('removeSet') : t('addSet');
     const btnClass = inList ? 'wishlist-btn remove' : 'wishlist-btn';
     let html = '';
-    if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">← Back</button>`;
+    if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     html += `<div class="set-info"><h2>📦 ${escapeHtml(setName)}</h2><button class="${btnClass}" id="toggleSetBtn">${btnText}</button></div>`;
-    html += `<table class="set-table"><thead><tr><th>Part</th><th>Rarity</th><th>Relics</th><th>Ducats</th></tr></thead><tbody>`;
+    html += `<table class="set-table"><thead><tr><th>${t('part')}</th><th>${t('rarity')}${t('rarity') ? '' : ''}</th><th>${t('relics')}</th><th>${t('ducats')}</th></tr></thead><tbody>`;
     parts.forEach(p => html += `<tr><td><a class="part-link" data-part="${escapeHtml(p.name)}">${escapeHtml(p.name)}</a></td><td>${p.rarity}</td><td>${p.relicCount}</td><td>${p.ducats}</td></tr>`);
     html += `</tbody></table>`;
     resultsDiv.innerHTML = html;
@@ -288,14 +288,14 @@ function renderSetPage(data) {
 
 // ================== PART PAGE ==================
 async function loadRelics(partName) {
-    resultsDiv.innerHTML = '<p>Loading...</p>';
+    resultsDiv.innerHTML = `<p>${t('loadingPart')}</p>`;
     try {
         const resp = await fetch(`${RELICS_URL}?part=${encodeURIComponent(partName)}`);
-        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">Error ${resp.status}</p>`; return; }
+        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">${t('error')} ${resp.status}</p>`; return; }
         const data = await resp.json();
-        if (!data.relics.length) { resultsDiv.innerHTML = '<p>No relics found.</p>'; return; }
+        if (!data.relics.length) { resultsDiv.innerHTML = `<p>${t('partNotFound')}</p>`; return; }
         renderRelicTable(data);
-    } catch (e) { resultsDiv.innerHTML = '<p class="error">Error</p>'; }
+    } catch (e) { resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
 }
 
 function renderRelicTable(data) {
@@ -311,18 +311,18 @@ function renderRelicTable(data) {
     const chances = unique[0]?.dropChances || {};
     const ducats = data.ducats || 0;
     const inWish = isInWishlist(data.part);
-    const btnText = inWish ? '❌ Remove from wishlist' : '➕ Add to wishlist';
+    const btnText = inWish ? t('removeFromWishlist') : t('addToWishlist');
     const btnClass = inWish ? 'wishlist-btn remove' : 'wishlist-btn';
 
     let html = '';
-    if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">← Back</button>`;
+    if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     const display = data.setName && data.part.startsWith(data.setName + ' ') ? `<a class="set-link">${escapeHtml(data.setName)}</a>${escapeHtml(data.part.slice(data.setName.length))}` : escapeHtml(data.part);
     html += `<div class="part-info"><h2>${display}</h2><button class="${btnClass}">${btnText}</button></div>`;
-    html += `<div class="rarity-info"><span>Rarity: <strong>${rarity}</strong></span> <span class="chances-summary">(Intact: ${chances.Intact} | Exceptional: ${chances.Exceptional} | Flawless: ${chances.Flawless} | Radiant: ${chances.Radiant})</span> <span class="ducats">| ${ducats} ducats</span><span class="platinum-price">| platinum N/A</span></div>`;
-    html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnly"> Show available only</label></div>`;
-    html += `<table id="relicsTable"><thead><tr><th>Relic</th><th>Status</th></tr></thead><tbody>`;
+    html += `<div class="rarity-info"><span>${t('rarity')} <strong>${rarity}</strong></span> <span class="chances-summary">(Intact: ${chances.Intact} | Exceptional: ${chances.Exceptional} | Flawless: ${chances.Flawless} | Radiant: ${chances.Radiant})</span> <span class="ducats">| ${ducats} ${t('ducats')}</span><span class="platinum-price">| ${t('platinumNA')}</span></div>`;
+    html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnly"> ${t('showAvailableOnly')}</label></div>`;
+    html += `<table id="relicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th></tr></thead><tbody>`;
     unique.forEach(r => {
-        const status = r.isResurgence ? 'Resurgence' : (r.isVaulted ? 'Vaulted' : 'Available');
+        const status = r.isResurgence ? t('resurgence') : (r.isVaulted ? t('vaulted') : t('available'));
         const cls = r.isResurgence ? 'not-vaulted' : (r.isVaulted ? 'vaulted' : 'not-vaulted');
         const rowCls = r.isVaulted && !r.isResurgence ? 'vaulted-row' : 'available-row';
         html += `<tr class="${rowCls}"><td class="relic-name" data-full-name="${escapeHtml(r.fullName)}">${r.name}</td><td class="${cls}">${status}</td></tr>`;
@@ -345,29 +345,29 @@ function renderRelicTable(data) {
 // ================== RELIC PAGE ==================
 async function loadRelicDetails(relicName) {
     const base = relicName.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, '');
-    resultsDiv.innerHTML = '<p>Loading...</p>';
+    resultsDiv.innerHTML = `<p>${t('loadingRelic')}</p>`;
     try {
         const resp = await fetch(`${RELIC_DETAILS_URL}?relic=${encodeURIComponent(base)}`);
-        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">Error ${resp.status}</p>`; return; }
+        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">${t('error')} ${resp.status}</p>`; return; }
         renderRelicDetails(await resp.json());
-    } catch (e) { resultsDiv.innerHTML = '<p class="error">Error</p>'; }
+    } catch (e) { resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
 }
 
 function renderRelicDetails(data) {
     const { relicName, isVaulted, isResurgence, rewards } = data;
-    const status = isResurgence ? 'Resurgence' : (isVaulted ? 'Vaulted' : 'Available');
+    const status = isResurgence ? t('resurgence') : (isVaulted ? t('vaulted') : t('available'));
     const cls = isResurgence ? 'not-vaulted' : (isVaulted ? 'vaulted' : 'not-vaulted');
     let html = '';
-    if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">← Back</button>`;
-    html += `<div class="relic-info"><h2>${escapeHtml(relicName)}</h2><p>Status: <span class="${cls}">${status}</span></p></div>`;
-    html += `<table class="rewards-table"><thead><tr><th>Reward</th><th>Rarity</th><th>Intact</th><th>Exceptional</th><th>Flawless</th><th>Radiant</th><th>Ducats</th><th></th></tr></thead><tbody>`;
+    if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
+    html += `<div class="relic-info"><h2>${escapeHtml(relicName)}</h2><p>${t('status')}: <span class="${cls}">${status}</span></p></div>`;
+    html += `<table class="rewards-table"><thead><tr><th>${t('reward')}</th><th>${t('rarity')}</th><th>${t('intact')}</th><th>${t('exceptional')}</th><th>${t('flawless')}</th><th>${t('radiant')}</th><th>${t('ducats')}</th><th></th></tr></thead><tbody>`;
     rewards.forEach(r => {
         const ch = r.dropChances;
         const inWish = isInWishlist(r.partName);
         html += `<tr><td class="reward-part" data-part="${escapeHtml(r.partName)}">${escapeHtml(r.partName)}</td><td>${r.rarity}</td><td>${ch.Intact}</td><td>${ch.Exceptional}</td><td>${ch.Flawless}</td><td>${ch.Radiant}</td><td>${r.ducats}</td><td><button class="wishlist-btn ${inWish ? 'remove' : ''}" data-part="${escapeHtml(r.partName)}">${inWish ? '❌ Remove' : '➕ Add'}</button></td></tr>`;
     });
     html += `</tbody></table>`;
-    html += `<p class="drop-locations"><a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">Search on EN Wiki ↗</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">Поиск на RU Wiki ↗</a></p>`;
+    html += `<p class="drop-locations"><a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a></p>`;
     resultsDiv.innerHTML = html;
 
     document.querySelectorAll('.wishlist-btn').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); toggleWishlist('part', b.dataset.part); }));
@@ -394,3 +394,4 @@ searchInput.addEventListener('keydown', (e) => {
 });
 
 renderWishlist();
+applyLanguage();  // Применить язык при загрузке
