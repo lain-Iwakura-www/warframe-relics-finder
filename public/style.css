@@ -519,20 +519,42 @@ footer a:hover {
 }
 
 /* Стили для селекта сортировки */
+/* Блок сортировки – теперь выглядит как кнопка с выпадающим списком */
+.sort-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(30,30,52,0.8);
+    border-radius: 8px;
+    padding: 6px 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    color: #ccc;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
 .sort-label select {
+    background: transparent;
+    color: #eee;
+    border: none;
+    font-size: 0.9em;
+    font-weight: bold;
+    padding: 4px 28px 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    appearance: none;                     /* убираем стандартную стрелку */
+    /* кастомная стрелка */
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23eee' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    background-color: transparent;
+}
+
+.sort-label select option {
     background: #1e1e34;
     color: #eee;
-    border: 1px solid #444;
-    border-radius: 4px;
-    padding: 6px 10px;
-    font-size: 0.9em;
-    cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.sort-label select:focus {
-    outline: none;
-    border-color: #e0b0ff;
-    box-shadow: 0 0 8px rgba(224, 176, 255, 0.3);
 }
 
 /* Переключатель языка */

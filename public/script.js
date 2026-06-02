@@ -37,9 +37,29 @@ function isSetInWishlist(setName) {
     return wishlist.some(item => item.type === 'set' && item.name === setName);
 }
 function getPartObtained(partName) {
-    const entry = wishlist.find(item => item.type === 'part' && item.name === partName);
-    return entry ? entry.obtained : false;
+    // 1. Ищем отдельную запись (type: 'part')
+    const partEntry = wishlist.find(item => item.type === 'part' && item.name === partName);
+    if (partEntry) return partEntry.obtained;
+
+    // 2. Если отдельной записи нет, ищем внутри наборов
+    for (const item of wishlist) {
+        if (item.type === 'set') {
+            const partInSet = item.parts.find(p => p.name === partName);
+            if (partInSet) return partInSet.obtained;
+        }
+    }
+    return false;
+}    
+
+function countObtained(item) {
+    if (item.type === 'part') {
+        return item.obtained ? 1 : 0;
+    } else { // тип 'set'
+        return item.parts.filter(p => p.obtained).length;
+    }
+
 }
+
 function syncPartObtained(partName, obtained) {
     wishlist.forEach(item => {
         if (item.type === 'part' && item.name === partName) item.obtained = obtained;
@@ -53,9 +73,9 @@ function sortWishlist(list) {
     if (wishlistSort === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name));
     else if (wishlistSort === 'obtained') {
         sorted.sort((a, b) => {
-            const aOb = a.type === 'part' ? a.obtained : a.parts.every(p => p.obtained);
-            const bOb = b.type === 'part' ? b.obtained : b.parts.every(p => p.obtained);
-            return aOb - bOb;
+            const countA = countObtained(a);
+            const countB = countObtained(b);
+            return countA - countB;  // сначала невыбитые (0), потом выбитые (1 и больше)
         });
     }
     return sorted;
