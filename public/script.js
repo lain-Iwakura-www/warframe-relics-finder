@@ -158,13 +158,10 @@ function toggleWishlist(type, name, parts = null) {
 
 // ================== FIND BEST RELICS ==================
 async function findBestRelics() {
-    // Собираем только невыбитые части
     const partNames = [];
     wishlist.forEach(item => {
         if (item.type === 'part' && !item.obtained) partNames.push(item.name);
-        else if (item.type === 'set') {
-            item.parts.forEach(p => { if (!p.obtained) partNames.push(p.name); });
-        }
+        else if (item.type === 'set') item.parts.forEach(p => { if (!p.obtained) partNames.push(p.name); });
     });
     const uniqueParts = [...new Set(partNames)];
     if (!uniqueParts.length) {
@@ -210,10 +207,11 @@ function renderBestRelics(relics) {
         const vaultedClass = r.isVaulted ? 'vaulted' : 'not-vaulted';
         const vaultedText = r.isVaulted ? 'Vaulted' : 'Available';
         const rowClass = r.isVaulted ? 'vaulted-row' : 'available-row';
+        const safeParts = r.desiredParts.map(escapeHtml).join(', ');
         html += `<tr class="${rowClass}">
             <td class="relic-name">${escapeHtml(r.relic)}</td>
             <td class="${vaultedClass}">${vaultedText}</td>
-            <td>${escapeHtml(r.desiredParts.join(', '))}</td>
+            <td>${safeParts}</td>
             <td>${r.desiredCount}</td>
         </tr>`;
     });
@@ -221,7 +219,6 @@ function renderBestRelics(relics) {
     html += `</tbody></table>`;
     resultsDiv.innerHTML = html;
 
-    // Фильтр "доступные только"
     const checkbox = document.getElementById('showAvailableOnlyBest');
     if (checkbox) {
         checkbox.addEventListener('change', function() {
@@ -232,7 +229,6 @@ function renderBestRelics(relics) {
         });
     }
 
-    // Кликабельность названий реликвий
     document.querySelectorAll('.relic-name').forEach(td => {
         td.addEventListener('click', () => {
             const baseName = td.textContent.trim();
@@ -429,13 +425,8 @@ function renderRelicDetails(data) {
     const vaultedText = isVaulted ? 'Vaulted' : 'Available';
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">← Back</button>`;
-    html += `<div class="relic-info"><h2>${relicName}</h2><p>Status: <span class="${isVaulted ? 'vaulted' : 'not-vaulted'}">${vaultedText}</span></p></div>`;
+    html += `<div class="relic-info"><h2>${escapeHtml(relicName)}</h2><p>Status: <span class="${isVaulted ? 'vaulted' : 'not-vaulted'}">${vaultedText}</span></p></div>`;
     html += `<table class="rewards-table"><thead><tr><th>Reward</th><th>Rarity</th><th>Intact</th><th>Exceptional</th><th>Flawless</th><th>Radiant</th><th>Ducats</th><th></th></tr></thead><tbody>`;
-    html += `<p class="drop-locations">
-    <a href="https://warframe.fandom.com/wiki/${encodeURIComponent(relicName)}" target="_blank" rel="noopener">
-        Drop locations on Warframe Wiki ↗
-    </a>
-</p>`;
     rewards.forEach(reward => {
         const chances = reward.dropChances;
         const inWishlist = isInWishlist(reward.partName);
@@ -452,6 +443,12 @@ function renderRelicDetails(data) {
         </tr>`;
     });
     html += `</tbody></table>`;
+    // Ссылка на общий список реликвий
+    html += `<p class="drop-locations">
+        <a href="https://warframe.fandom.com/wiki/Void_Relic#Vaulted_Relics" target="_blank" rel="noopener">
+            Drop locations on Warframe Wiki ↗
+        </a>
+    </p>`;
     resultsDiv.innerHTML = html;
 
     document.querySelectorAll('.wishlist-btn').forEach(btn => {

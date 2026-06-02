@@ -445,3 +445,31 @@ tr:hover td {
     color: #80c8ff;
     text-decoration: underline;
 }
+/* Крестик удаления наборов – идентичен одиночным элементам */
+.wishlist-set-btns .delete-btn {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 5px;
+    line-height: 1;
+    transition: transform 0.2s, color 0.2s;
+}
+.wishlist-set-btns .delete-btn:hover {
+    transform: scale(1.2);
+    color: #ff4444;
+}
+
+/* Индикатор раскрытия набора */
+.wishlist-set summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s;
+    font-size: 14px;
+    color: #e0b0ff;
+}
+.wishlist-set[open] summary::before {
+    transform: rotate(90deg);
+}

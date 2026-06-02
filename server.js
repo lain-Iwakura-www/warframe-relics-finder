@@ -1,5 +1,5 @@
-const path = require('path');
 const express = require('express');
+const path = require('path');
 const Items = require('@wfcd/items');
 
 const CONFIG = {
@@ -26,16 +26,8 @@ const PART_SUFFIXES = [
     'Guard', 'Ornament', 'Stars', 'Collar', 'Band',
     'Kavat', 'Mask', 'Tail', 'Wings', 'Core',
     'Carapace', 'Cerebrum',
-    // Дополнительные для оружия ближнего боя и редких частей
-    'Gauntlet', 'Disc', 'Pouch', 'Guard', 'Blade',
-    'Chain', 'Hilt', 'Bow', 'Arrow', 'Quiver',
-    'Stock', 'Receiver', 'Barrel', 'Grip',
-    'Blade', 'Handle', 'Head', 'Link',
-    'Stars', 'Ornament', 'Collar', 'Band',
-    'Kavat', 'Mask', 'Tail', 'Wings',
-    'Core', 'Carapace', 'Cerebrum'
+    'Gauntlet', 'Disc', 'Pouch', 'Chain', 'Hilt',
 ];
-
 const MULTI_WORD_SUFFIXES = ['Lower Limb', 'Upper Limb'];
 
 function extractSetName(partName) {
@@ -58,7 +50,8 @@ function extractSetName(partName) {
             break;
         }
     }
-    return trimmed.trim() || partName;
+    const result = trimmed.trim();
+    return result.length > 0 ? result : partName;
 }
 
 function buildRelicIndex(items) {
@@ -152,7 +145,8 @@ function calculateDropChances(rarity) {
 }
 
 const app = express();
-app.use(express.static('public'));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/prime-parts', (req, res) => {
     if (!primePartsList.length) return res.status(503).json({ error: 'Data is still loading.' });
@@ -230,27 +224,23 @@ app.get('/api/relic-details', (req, res) => {
     res.json({ relicName, isVaulted, rewards });
 });
 
-// Эндпоинт для поиска оптимальных реликвий по списку желаемых частей
-app.post('/api/optimal-relics', express.json(), (req, res) => {
+app.post('/api/optimal-relics', (req, res) => {
     const { parts } = req.body;
-
     if (!Array.isArray(parts) || parts.length === 0) {
         return res.status(400).json({ error: 'Missing or empty "parts" array.' });
     }
+    if (!parts.every(p => typeof p === 'string')) {
+        return res.status(400).json({ error: 'All items in "parts" must be strings.' });
+    }
 
-    // Создаём Set для быстрого поиска
     const desiredSet = new Set(parts.map(p => p.toLowerCase()));
     const result = [];
 
-    // Проходим по всем реликвиям из relicRewardsMap
     for (const [relicBaseName, rewards] of relicRewardsMap.entries()) {
-        // Находим, какие из желаемых частей есть в этой реликвии
         const matched = rewards.filter(r => desiredSet.has(r.partName.toLowerCase()));
         if (matched.length === 0) continue;
 
-        // Определяем статус vaulted (возьмём из partToRelicsMap для любой из этих частей)
         let isVaulted = false;
-        // Ищем любую часть, для которой есть запись в partToRelicsMap с этой реликвией
         for (const reward of matched) {
             const entries = partToRelicsMap.get(reward.partName);
             if (entries) {
@@ -267,41 +257,38 @@ app.post('/api/optimal-relics', express.json(), (req, res) => {
             desiredCount: matched.length,
             desiredParts: matched.map(r => r.partName),
             isVaulted,
-            // Можно добавить другие поля при желании
         });
     }
 
-    // Сортируем: сначала по количеству совпадений (по убыванию), затем по имени
     result.sort((a, b) => {
         if (b.desiredCount !== a.desiredCount) return b.desiredCount - a.desiredCount;
         return a.relic.localeCompare(b.relic);
     });
 
-    // Ограничим 50 результатами
     res.json({ relics: result.slice(0, 50) });
 });
 
 async function initializeAndStart(attempt = 0) {
-    console.log(`[${new Date().toISOString()}] Loading Warframe data (attempt ${attempt + 1})...`);
+    console.log(`[${new Date().toISOString()}] Loading Warframe data...`);
     let items;
     try {
         items = new Items();
         if (!items.length) {
-            if (attempt >= CONFIG.MAX_LOAD_ATTEMPTS) {
-                throw new Error(`Data not ready after ${CONFIG.MAX_LOAD_ATTEMPTS * CONFIG.LOAD_INTERVAL_MS / 1000}s`);
-            }
+            if (attempt >= CONFIG.MAX_LOAD_ATTEMPTS) throw new Error('Timeout');
             setTimeout(() => initializeAndStart(attempt + 1), CONFIG.LOAD_INTERVAL_MS);
             return;
         }
-    } catch (err) { console.error('Failed to create Items:', err); process.exit(1); }
+    } catch (err) {
+        console.error(err);
+        process.exit(1);
+    }
 
-    console.log(`Loaded ${items.length} items. Building relic index...`);
     partToRelicsMap = buildRelicIndex(items);
-    console.log(`Index built. Found ${primePartsList.length} unique prime parts.`);
+    console.log(`Index built. ${primePartsList.length} prime parts.`);
     setIndex = buildSetIndex();
-    console.log(`Set index built. Found ${setIndex.size} sets.`);
+    console.log(`Set index built. ${setIndex.size} sets.`);
 
     app.listen(CONFIG.PORT, () => console.log(`✅ Server running at http://localhost:${CONFIG.PORT}`));
 }
 
-initializeAndStart().catch(err => { console.error('Fatal error:', err); process.exit(1); });
+initializeAndStart().catch(err => { console.error(err); process.exit(1); });
