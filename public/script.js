@@ -431,6 +431,11 @@ function renderRelicDetails(data) {
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">← Back</button>`;
     html += `<div class="relic-info"><h2>${relicName}</h2><p>Status: <span class="${isVaulted ? 'vaulted' : 'not-vaulted'}">${vaultedText}</span></p></div>`;
     html += `<table class="rewards-table"><thead><tr><th>Reward</th><th>Rarity</th><th>Intact</th><th>Exceptional</th><th>Flawless</th><th>Radiant</th><th>Ducats</th><th></th></tr></thead><tbody>`;
+    html += `<p class="drop-locations">
+    <a href="https://warframe.fandom.com/wiki/${encodeURIComponent(relicName)}" target="_blank" rel="noopener">
+        Drop locations on Warframe Wiki ↗
+    </a>
+</p>`;
     rewards.forEach(reward => {
         const chances = reward.dropChances;
         const inWishlist = isInWishlist(reward.partName);

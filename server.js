@@ -20,12 +20,22 @@ let relicRewardsMap = new Map();
 
 const PART_SUFFIXES = [
     'Blueprint', 'Neuroptics', 'Chassis', 'Systems',
-    'Barrel', 'Receiver', 'Stock', 'Blade', 'Handle',
-    'Head', 'Grip', 'Link', 'Lower Limb', 'Upper Limb',
-    'Pod', 'String', 'Guard', 'Ornament', 'Stars',
-    'Collar', 'Band', 'Kavat', 'Mask', 'Tail',
-    'Wings', 'Core', 'Carapace', 'Cerebrum',
+    'Barrel', 'Receiver', 'Stock',
+    'Blade', 'Handle', 'Head', 'Grip', 'Link',
+    'Lower Limb', 'Upper Limb', 'Pod', 'String',
+    'Guard', 'Ornament', 'Stars', 'Collar', 'Band',
+    'Kavat', 'Mask', 'Tail', 'Wings', 'Core',
+    'Carapace', 'Cerebrum',
+    // Дополнительные для оружия ближнего боя и редких частей
+    'Gauntlet', 'Disc', 'Pouch', 'Guard', 'Blade',
+    'Chain', 'Hilt', 'Bow', 'Arrow', 'Quiver',
+    'Stock', 'Receiver', 'Barrel', 'Grip',
+    'Blade', 'Handle', 'Head', 'Link',
+    'Stars', 'Ornament', 'Collar', 'Band',
+    'Kavat', 'Mask', 'Tail', 'Wings',
+    'Core', 'Carapace', 'Cerebrum'
 ];
+
 const MULTI_WORD_SUFFIXES = ['Lower Limb', 'Upper Limb'];
 
 function extractSetName(partName) {
