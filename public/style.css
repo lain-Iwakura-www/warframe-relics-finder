@@ -473,3 +473,18 @@ tr:hover td {
 .wishlist-set[open] summary::before {
     transform: rotate(90deg);
 }
+footer {
+    margin-top: 40px;
+    padding: 20px;
+    text-align: center;
+    color: #888;
+    font-size: 0.85em;
+    border-top: 1px solid #2a2a4a;
+}
+footer a {
+    color: #5cb8ff;
+    text-decoration: none;
+}
+footer a:hover {
+    text-decoration: underline;
+}

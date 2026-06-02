@@ -444,11 +444,13 @@ function renderRelicDetails(data) {
     });
     html += `</tbody></table>`;
     // Ссылка на общий список реликвий
+    const searchQuery = encodeURIComponent(relicName);
     html += `<p class="drop-locations">
-        <a href="https://warframe.fandom.com/wiki/Void_Relic#Vaulted_Relics" target="_blank" rel="noopener">
-            Drop locations on Warframe Wiki ↗
+    <a href="https://warframe.fandom.com/wiki/Special:Search?query=${searchQuery}" target="_blank" rel="noopener">
+        Search on Warframe Wiki ↗
         </a>
     </p>`;
+
     resultsDiv.innerHTML = html;
 
     document.querySelectorAll('.wishlist-btn').forEach(btn => {
