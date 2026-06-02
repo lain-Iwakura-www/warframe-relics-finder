@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warframe Relic Finder</title>
+    <!-- Иконки -->
+    <link rel="icon" type="image/x-icon" href="/Favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <!-- Стили -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -33,15 +38,16 @@
             </div>
         </footer>
     </div>
+    <!-- Скрипты -->
     <script src="lang.js"></script>
     <script src="script.js"></script>
     <script>
-        // Инициализация языка
+        // Переключение языка
         document.getElementById('btnEn').addEventListener('click', () => setLanguage('en'));
         document.getElementById('btnRu').addEventListener('click', () => setLanguage('ru'));
+        // Применить язык при загрузке
         applyLanguage();
         document.querySelector('.disclaimer').textContent = t('disclaimer');
-        // Обновим текст заголовка
         document.getElementById('headerTitle').textContent = t('title');
     </script>
 </body>
