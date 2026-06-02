@@ -196,9 +196,9 @@ function renderBestRelics(relics) {
     html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnlyBest"> ${t('showAvailableOnly')}</label></div>`;
     html += `<table id="bestRelicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th><th>${t('missingParts')}</th><th>${t('count')}</th></tr></thead><tbody>`;
     relics.forEach(r => {
-        const status = r.isResurgence ? t('resurgence') : (r.isVaulted ? t('vaulted') : t('available'));
-        const cls = r.isResurgence ? 'not-vaulted' : (r.isVaulted ? 'vaulted' : 'not-vaulted');
-        const rowCls = r.isVaulted && !r.isResurgence ? 'vaulted-row' : 'available-row';
+        const status = (r.isVaulted ? t('vaulted') : t('available'));
+        const cls = (r.isVaulted ? 'vaulted' : 'not-vaulted');
+        const rowCls = r.isVaulted ? 'vaulted-row' : 'available-row';
         const safeParts = r.desiredParts.map(escapeHtml).join(', ');
         html += `<tr class="${rowCls}"><td class="relic-name">${escapeHtml(r.relic)}</td><td class="${cls}">${status}</td><td>${safeParts}</td><td>${r.desiredCount}</td></tr>`;
     });
@@ -326,9 +326,9 @@ function renderRelicTable(data) {
     html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnly"> ${t('showAvailableOnly')}</label></div>`;
     html += `<table id="relicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th></tr></thead><tbody>`;
     unique.forEach(r => {
-        const status = r.isResurgence ? t('resurgence') : (r.isVaulted ? t('vaulted') : t('available'));
-        const cls = r.isResurgence ? 'not-vaulted' : (r.isVaulted ? 'vaulted' : 'not-vaulted');
-        const rowCls = r.isVaulted && !r.isResurgence ? 'vaulted-row' : 'available-row';
+        const status = (r.isVaulted ? t('vaulted') : t('available'));
+        const cls = (r.isVaulted ? 'vaulted' : 'not-vaulted');
+        const rowCls = r.isVaulted ? 'vaulted-row' : 'available-row';
         html += `<tr class="${rowCls}"><td class="relic-name" data-full-name="${escapeHtml(r.fullName)}">${r.name}</td><td class="${cls}">${status}</td></tr>`;
     });
     html += `</tbody></table>`;
@@ -358,9 +358,9 @@ async function loadRelicDetails(relicName) {
 }
 
 function renderRelicDetails(data) {
-    const { relicName, isVaulted, isResurgence, rewards } = data;
-    const status = isResurgence ? t('resurgence') : (isVaulted ? t('vaulted') : t('available'));
-    const cls = isResurgence ? 'not-vaulted' : (isVaulted ? 'vaulted' : 'not-vaulted');
+    const { relicName, isVaulted, rewards } = data;
+    const status = (isVaulted ? t('vaulted') : t('available'));
+    const cls = (isVaulted ? 'vaulted' : 'not-vaulted');
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     html += `<div class="relic-info"><h2>${escapeHtml(relicName)}</h2><p>${t('status')}: <span class="${cls}">${status}</span></p></div>`;

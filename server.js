@@ -12,9 +12,6 @@ const CONFIG = {
 
 const DUCATS_BY_RARITY = { Common: 15, Uncommon: 45, Rare: 100 };
 
-// Актуальные наборы Prime Resurgence (обновляется вручную)
-const RESURGENCE_WARFRAMES = new Set(['Rhino Prime', 'Nyx Prime']);
-
 let primePartsList = [];
 let partToRelicsMap = null;
 let partRarityMap = new Map();
@@ -146,17 +143,6 @@ function calculateDropChances(rarity) {
     return chances;
 }
 
-// Проверка, принадлежит ли реликвия к набору из Prime Resurgence
-function isRelicResurgence(relicBaseName) {
-    for (const [partName, entries] of partToRelicsMap) {
-        const entry = entries.find(e => e.relic.name.startsWith(relicBaseName));
-        if (!entry) continue;
-        const setName = extractSetName(partName);
-        if (RESURGENCE_WARFRAMES.has(setName)) return true;
-    }
-    return false;
-}
-
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -201,7 +187,6 @@ app.get('/api/relics-for-part', (req, res) => {
         name: relic.name,
         tier: relic.tier || relic.era || 'Unknown',
         isVaulted: relic.vaulted === true,
-        isResurgence: isRelicResurgence(relic.name.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, '')),
         rarity: reward.rarity || 'Common',
         dropChances: calculateDropChances(reward.rarity || 'Common'),
     }));
@@ -249,8 +234,7 @@ app.get('/api/relic-details', (req, res) => {
         if (entry) { isVaulted = entry.relic.vaulted === true; break; }
     }
 
-    const isResurgence = isRelicResurgence(relicName);
-    res.json({ relicName, isVaulted, isResurgence, rewards });
+    res.json({ relicName, isVaulted, rewards });
 });
 
 app.post('/api/optimal-relics', (req, res) => {
@@ -286,7 +270,6 @@ app.post('/api/optimal-relics', (req, res) => {
             desiredCount: matched.length,
             desiredParts: matched.map(r => r.partName),
             isVaulted,
-            isResurgence: isRelicResurgence(relicBaseName),
         });
     }
 
