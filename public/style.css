@@ -11,18 +11,8 @@ h1 { text-align: center; margin-bottom: 30px; color: #e0b0ff; }
 #suggestions li { padding: 10px 15px; cursor: pointer; transition: background 0.2s; }
 #suggestions li:hover { background: #2a2a4a; color: #e0b0ff; }
 
-/* Блок результатов — изначально скрыт */
-#results {
-    display: none;
-}
-.results-section {
-    display: block;              /* будет показан, когда появится содержимое */
-    background: #16213e;
-    border-radius: 8px;
-    padding: 20px;
-    min-height: 100px;
-    margin-bottom: 30px;
-}
+#results { display: none; }
+.results-section { display: block; background: #16213e; border-radius: 8px; padding: 20px; min-height: 100px; margin-bottom: 30px; }
 
 .part-info, .set-info, .relic-info { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 .part-info h2, .set-info h2, .relic-info h2 { margin: 0; }
@@ -42,20 +32,17 @@ th { background: #2a2a4a; color: #e0b0ff; font-weight: bold; }
 tr:hover td { background: #2a2a4a; }
 .vaulted { color: #ff6b6b; font-weight: bold; }
 .not-vaulted { color: #51cf66; }
+
 .wishlist-section { background: #16213e; border-radius: 8px; padding: 20px; }
 .wishlist-section h2 { color: #e0b0ff; margin-bottom: 15px; }
 #wishlist-items { list-style: none; }
 
-.wishlist-item {
-    display: flex; align-items: center; gap: 10px; padding: 10px; margin: 2px 0; border-radius: 6px; background: #1e1e34; transition: background 0.2s;
-}
+.wishlist-item { display: flex; align-items: center; gap: 10px; padding: 10px; margin: 2px 0; border-radius: 6px; background: #1e1e34; transition: background 0.2s; }
 .wishlist-item:hover { background: #252545; }
 .wishlist-item span { flex: 1; cursor: pointer; transition: color 0.2s; }
 .wishlist-item span:hover { color: #e0b0ff; }
 .wishlist-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #51cf66; }
-.wishlist-item .delete-btn {
-    background: none; border: none; color: #ff6b6b; font-size: 20px; cursor: pointer; padding: 0 5px; line-height: 1; transition: color 0.2s;
-}
+.wishlist-item .delete-btn { background: none; border: none; color: #ff6b6b; font-size: 20px; cursor: pointer; padding: 0 5px; line-height: 1; transition: color 0.2s; }
 .wishlist-item .delete-btn:hover { color: #ff4444; }
 .obtained { text-decoration: line-through; opacity: 0.6; }
 
@@ -66,9 +53,7 @@ tr:hover td { background: #2a2a4a; }
 .wishlist-set-name { flex: 1; color: #e0b0ff; }
 .wishlist-set-btns { display: flex; gap: 5px; margin-left: 10px; }
 .wishlist-set-parts { list-style: none; padding: 0 10px 10px 20px; }
-.wishlist-set-btns .delete-btn {
-    background: none; border: none; color: #ff6b6b; font-size: 20px; cursor: pointer; padding: 0 5px; line-height: 1; transition: color 0.2s;
-}
+.wishlist-set-btns .delete-btn { background: none; border: none; color: #ff6b6b; font-size: 20px; cursor: pointer; padding: 0 5px; line-height: 1; transition: color 0.2s; }
 .wishlist-set-btns .delete-btn:hover { color: #ff4444; }
 
 .back-btn { background: none; border: 1px solid #444; color: #e0b0ff; padding: 6px 12px; border-radius: 4px; margin-bottom: 15px; cursor: pointer; transition: background 0.3s; }
@@ -82,13 +67,24 @@ tr:hover td { background: #2a2a4a; }
 .part-link { color: #e0b0ff; cursor: pointer; text-decoration: underline; text-decoration-style: dotted; transition: color 0.2s; }
 .part-link:hover { color: #cf8ff0; }
 .set-table .part-link { color: #e0b0ff; }
-.platinum-price { color: #5cb8ff; font-weight: bold; }
+
+/* Кнопка Find Best Relics */
 .wishlist-action {
     list-style: none;
     margin-top: 15px;
     text-align: center;
 }
 .wishlist-action button {
+    background: #51cf66;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 6px;
     padding: 12px 30px;
+    font-weight: bold;
     font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.wishlist-action button:hover {
+    background: #40b04a;
 }

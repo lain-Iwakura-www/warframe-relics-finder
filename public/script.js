@@ -1,4 +1,3 @@
-// Полный script.js с кнопкой Find Best Relics и исправленным синтаксисом
 const SEARCH_URL = '/api/search';
 const SETS_SEARCH_URL = '/api/search-sets';
 const SETS_URL = '/api/sets';
@@ -125,7 +124,7 @@ function renderWishlist() {
         }
     });
 
-    // Кнопка "Find Best Relics" в конце списка желаемого
+    // Кнопка "Find Best Relics"
     const btnLi = document.createElement('li');
     btnLi.className = 'wishlist-action';
     const btn = document.createElement('button');
@@ -159,13 +158,19 @@ function toggleWishlist(type, name, parts = null) {
 
 // ================== FIND BEST RELICS ==================
 async function findBestRelics() {
+    // Собираем только невыбитые части
     const partNames = [];
     wishlist.forEach(item => {
-        if (item.type === 'part') partNames.push(item.name);
-        else if (item.type === 'set') item.parts.forEach(p => partNames.push(p.name));
+        if (item.type === 'part' && !item.obtained) partNames.push(item.name);
+        else if (item.type === 'set') {
+            item.parts.forEach(p => { if (!p.obtained) partNames.push(p.name); });
+        }
     });
     const uniqueParts = [...new Set(partNames)];
-    if (!uniqueParts.length) return;
+    if (!uniqueParts.length) {
+        alert('All parts obtained! Nothing to search.');
+        return;
+    }
 
     resultsDiv.style.display = 'block';
     resultsDiv.innerHTML = '<p>Finding best relics...</p>';
@@ -182,7 +187,7 @@ async function findBestRelics() {
         }
         const data = await resp.json();
         if (!data.relics || data.relics.length === 0) {
-            resultsDiv.innerHTML = '<p>No relics contain your desired parts.</p>';
+            resultsDiv.innerHTML = '<p>No relics contain your missing parts.</p>';
             return;
         }
         renderBestRelics(data.relics);
@@ -197,13 +202,15 @@ function renderBestRelics(relics) {
     if (historyStack.length > 0) {
         html += `<button class="back-btn" onclick="goBack()">← Back</button>`;
     }
-    html += `<h2>🎯 Best Relics for Your Wishlist</h2>`;
-    html += `<table><thead><tr><th>Relic</th><th>Status</th><th>Desired Parts</th><th>Count</th></tr></thead><tbody>`;
+    html += `<h2>🎯 Best Relics for Your Missing Parts</h2>`;
+    html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnlyBest"> Show available only</label></div>`;
+    html += `<table id="bestRelicsTable"><thead><tr><th>Relic</th><th>Status</th><th>Missing Parts</th><th>Count</th></tr></thead><tbody>`;
 
     relics.forEach(r => {
         const vaultedClass = r.isVaulted ? 'vaulted' : 'not-vaulted';
         const vaultedText = r.isVaulted ? 'Vaulted' : 'Available';
-        html += `<tr>
+        const rowClass = r.isVaulted ? 'vaulted-row' : 'available-row';
+        html += `<tr class="${rowClass}">
             <td class="relic-name">${escapeHtml(r.relic)}</td>
             <td class="${vaultedClass}">${vaultedText}</td>
             <td>${escapeHtml(r.desiredParts.join(', '))}</td>
@@ -214,6 +221,18 @@ function renderBestRelics(relics) {
     html += `</tbody></table>`;
     resultsDiv.innerHTML = html;
 
+    // Фильтр "доступные только"
+    const checkbox = document.getElementById('showAvailableOnlyBest');
+    if (checkbox) {
+        checkbox.addEventListener('change', function() {
+            const show = this.checked;
+            document.querySelectorAll('#bestRelicsTable tbody tr').forEach(row => {
+                row.style.display = (show && row.classList.contains('vaulted-row')) ? 'none' : '';
+            });
+        });
+    }
+
+    // Кликабельность названий реликвий
     document.querySelectorAll('.relic-name').forEach(td => {
         td.addEventListener('click', () => {
             const baseName = td.textContent.trim();
