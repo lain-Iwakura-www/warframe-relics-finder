@@ -63,8 +63,11 @@ function sortWishlist(list) {
 
 function renderWishlist() {
     const openSets = new Set();
-    document.querySelectorAll('.wishlist-set[open]').forEach(d => { if (d.dataset.setName) openSets.add(d.dataset.setName); });
+    document.querySelectorAll('.wishlist-set[open]').forEach(d => {
+        if (d.dataset.setName) openSets.add(d.dataset.setName);
+    });
 
+    // Панель действий
     wishlistActions.innerHTML = '';
     if (wishlist.length > 0) {
         const sortLabel = document.createElement('label');
@@ -75,7 +78,10 @@ function renderWishlist() {
             <option value="added" ${wishlistSort === 'added' ? 'selected' : ''}>${t('sortAdded')}</option>
             <option value="name" ${wishlistSort === 'name' ? 'selected' : ''}>${t('sortName')}</option>
             <option value="obtained" ${wishlistSort === 'obtained' ? 'selected' : ''}>${t('sortObtained')}</option>`;
-        sortSelect.addEventListener('change', (e) => { wishlistSort = e.target.value; renderWishlist(); });
+        sortSelect.addEventListener('change', (e) => {
+            wishlistSort = e.target.value;
+            renderWishlist();
+        });
         sortLabel.appendChild(sortSelect);
         wishlistActions.appendChild(sortLabel);
 
@@ -94,48 +100,97 @@ function renderWishlist() {
 
     const sorted = sortWishlist(wishlist);
     wishlistItems.innerHTML = '';
-    sorted.forEach(item => {
+
+    sorted.forEach((item) => {
+        // Ищем оригинальный индекс в wishlist для прямых мутаций
+        const originalIndex = wishlist.indexOf(item);
+
         if (item.type === 'part') {
             const li = document.createElement('li');
             li.className = 'wishlist-item';
             const cb = document.createElement('input');
-            cb.type = 'checkbox'; cb.checked = item.obtained; cb.title = t('owned');
-            cb.addEventListener('change', () => { item.obtained = cb.checked; syncPartObtained(item.name, item.obtained); renderWishlist(); });
+            cb.type = 'checkbox';
+            cb.checked = item.obtained;
+            cb.title = t('owned');
+            cb.addEventListener('change', () => {
+                wishlist[originalIndex].obtained = cb.checked;
+                syncPartObtained(item.name, cb.checked);
+                saveWishlist(wishlist);
+                renderWishlist();
+            });
             const span = document.createElement('span');
             span.textContent = item.name;
             if (item.obtained) span.classList.add('obtained');
-            span.addEventListener('click', () => { searchInput.value = item.name; navigateTo({ type: 'part', name: item.name }); });
+            span.addEventListener('click', () => {
+                searchInput.value = item.name;
+                navigateTo({ type: 'part', name: item.name });
+            });
             const del = document.createElement('button');
-            del.className = 'delete-btn'; del.innerHTML = '×'; del.title = t('delete');
-            del.addEventListener('click', (e) => { e.stopPropagation(); wishlist = wishlist.filter(i => i !== item); saveWishlist(wishlist); renderWishlist(); });
-            li.appendChild(cb); li.appendChild(span); li.appendChild(del);
+            del.className = 'delete-btn';
+            del.innerHTML = '×';
+            del.title = t('delete');
+            del.addEventListener('click', (e) => {
+                e.stopPropagation();
+                wishlist.splice(originalIndex, 1);
+                saveWishlist(wishlist);
+                renderWishlist();
+                if (currentState?.type === 'part' && currentState.name === item.name) refreshCurrentPage();
+            });
+            li.appendChild(cb);
+            li.appendChild(span);
+            li.appendChild(del);
             wishlistItems.appendChild(li);
+
         } else if (item.type === 'set') {
             const details = document.createElement('details');
             details.className = 'wishlist-set';
             details.dataset.setName = item.name;
             if (openSets.has(item.name)) details.setAttribute('open', '');
+
             const summary = document.createElement('summary');
             summary.innerHTML = `<span class="wishlist-set-name">📦 ${escapeHtml(item.name)}</span>`;
             const delSet = document.createElement('button');
-            delSet.className = 'delete-btn'; delSet.innerHTML = '×'; delSet.title = t('deleteSet');
-            delSet.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); wishlist = wishlist.filter(i => i !== item); saveWishlist(wishlist); renderWishlist(); });
-            const btnWrap = document.createElement('span'); btnWrap.className = 'wishlist-set-btns'; btnWrap.appendChild(delSet);
+            delSet.className = 'delete-btn';
+            delSet.innerHTML = '×';
+            delSet.title = t('deleteSet');
+            delSet.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                wishlist.splice(originalIndex, 1);
+                saveWishlist(wishlist);
+                renderWishlist();
+                if (currentState?.type === 'set' && currentState.name === item.name) refreshCurrentPage();
+            });
+            const btnWrap = document.createElement('span');
+            btnWrap.className = 'wishlist-set-btns';
+            btnWrap.appendChild(delSet);
             summary.appendChild(btnWrap);
             details.appendChild(summary);
+
             const partsList = document.createElement('ul');
             partsList.className = 'wishlist-set-parts';
-            item.parts.forEach(part => {
+            item.parts.forEach((part, partIndex) => {
                 const pli = document.createElement('li');
                 pli.className = 'wishlist-item';
                 const pcb = document.createElement('input');
-                pcb.type = 'checkbox'; pcb.checked = part.obtained; pcb.title = t('owned');
-                pcb.addEventListener('change', () => { part.obtained = pcb.checked; syncPartObtained(part.name, part.obtained); renderWishlist(); });
+                pcb.type = 'checkbox';
+                pcb.checked = part.obtained;
+                pcb.title = t('owned');
+                pcb.addEventListener('change', () => {
+                    wishlist[originalIndex].parts[partIndex].obtained = pcb.checked;
+                    syncPartObtained(part.name, pcb.checked);
+                    saveWishlist(wishlist);
+                    renderWishlist();
+                });
                 const pspan = document.createElement('span');
                 pspan.textContent = part.name;
                 if (part.obtained) pspan.classList.add('obtained');
-                pspan.addEventListener('click', () => { searchInput.value = part.name; navigateTo({ type: 'part', name: part.name }); });
-                pli.appendChild(pcb); pli.appendChild(pspan);
+                pspan.addEventListener('click', () => {
+                    searchInput.value = part.name;
+                    navigateTo({ type: 'part', name: part.name });
+                });
+                pli.appendChild(pcb);
+                pli.appendChild(pspan);
                 partsList.appendChild(pli);
             });
             details.appendChild(partsList);
