@@ -67,7 +67,6 @@ function renderWishlist() {
         if (d.dataset.setName) openSets.add(d.dataset.setName);
     });
 
-    // Панель действий
     wishlistActions.innerHTML = '';
     if (wishlist.length > 0) {
         const sortLabel = document.createElement('label');
@@ -102,7 +101,7 @@ function renderWishlist() {
     wishlistItems.innerHTML = '';
 
     sorted.forEach((item) => {
-        // Ищем оригинальный индекс в wishlist для прямых мутаций
+        // Ищем реальный индекс в исходном массиве
         const originalIndex = wishlist.indexOf(item);
 
         if (item.type === 'part') {
@@ -113,6 +112,7 @@ function renderWishlist() {
             cb.checked = item.obtained;
             cb.title = t('owned');
             cb.addEventListener('change', () => {
+                // Меняем напрямую в оригинальном массиве
                 wishlist[originalIndex].obtained = cb.checked;
                 syncPartObtained(item.name, cb.checked);
                 saveWishlist(wishlist);
@@ -378,7 +378,7 @@ function renderRelicTable(data) {
     const display = data.setName && data.part.startsWith(data.setName + ' ') ? `<a class="set-link">${escapeHtml(data.setName)}</a>${escapeHtml(data.part.slice(data.setName.length))}` : escapeHtml(data.part);
     html += `<div class="part-info"><h2>${display}</h2><button class="${btnClass}">${btnText}</button></div>`;
     html += `<div class="rarity-info"><span>${t('rarity')} <strong>${rarity}</strong></span> <span class="chances-summary">(Intact: ${chances.Intact} | Exceptional: ${chances.Exceptional} | Flawless: ${chances.Flawless} | Radiant: ${chances.Radiant})</span> <span class="ducats">| ${ducats} ${t('ducats')}</span><span class="platinum-price">| ${t('platinumNA')}</span></div>`;
-    html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnly"> ${t('showAvailableOnly')}</label></div>`;
+    html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnly" checked> ${t('showAvailableOnly')}</label></div>`;
     html += `<table id="relicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th></tr></thead><tbody>`;
     unique.forEach(r => {
         const status = (r.isVaulted ? t('vaulted') : t('available'));
@@ -388,6 +388,13 @@ function renderRelicTable(data) {
     });
     html += `</tbody></table>`;
     resultsDiv.innerHTML = html;
+    // Автоприменение фильтра «доступные только»
+    const filterCheckbox = document.getElementById('showAvailableOnly');
+    if (filterCheckbox && filterCheckbox.checked) {
+        document.querySelectorAll('#relicsTable tbody tr').forEach(row => {
+            if (row.classList.contains('vaulted-row')) row.style.display = 'none';
+        });
+    }
 
     document.querySelector('.wishlist-btn')?.addEventListener('click', () => toggleWishlist('part', data.part));
     document.getElementById('showAvailableOnly')?.addEventListener('change', function() {
@@ -423,7 +430,14 @@ function renderRelicDetails(data) {
     rewards.forEach(r => {
         const ch = r.dropChances;
         const inWish = isInWishlist(r.partName);
-        html += `<tr><td class="reward-part" data-part="${escapeHtml(r.partName)}">${escapeHtml(r.partName)}</td><td>${r.rarity}</td><td>${ch.Intact}</td><td>${ch.Exceptional}</td><td>${ch.Flawless}</td><td>${ch.Radiant}</td><td>${r.ducats}</td><td><button class="wishlist-btn ${inWish ? 'remove' : ''}" data-part="${escapeHtml(r.partName)}">${inWish ? '❌ Remove' : '➕ Add'}</button></td></tr>`;
+        const inWishlist = isInWishlist(reward.partName);
+        const isObtained = inWishlist ? getPartObtained(reward.partName) : false;
+        let badge = '';
+            if (inWishlist) {
+                badge = isObtained ? ' ✔️' : ' ⭐';
+            }
+        html += `<tr>
+    <td class="reward-part" data-part="${escapeHtml(reward.partName)}">${escapeHtml(reward.partName)}${badge}</td><td>${r.rarity}</td><td>${ch.Intact}</td><td>${ch.Exceptional}</td><td>${ch.Flawless}</td><td>${ch.Radiant}</td><td>${r.ducats}</td><td><button class="wishlist-btn ${inWish ? 'remove' : ''}" data-part="${escapeHtml(r.partName)}">${inWish ? '❌ Remove' : '➕ Add'}</button></td></tr>`;
     });
     html += `</tbody></table>`;
     html += `<p class="drop-locations"><a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a></p>`;
