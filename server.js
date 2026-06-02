@@ -1,3 +1,6 @@
+const app = express();
+app.use(express.json());   // <-- нужно для парсинга JSON в POST
+app.use(express.static(path.join(__dirname, 'public')));
 const express = require('express');
 const Items = require('@wfcd/items');
 
@@ -217,6 +220,57 @@ app.get('/api/relic-details', (req, res) => {
         if (entry) { isVaulted = entry.relic.vaulted === true; break; }
     }
     res.json({ relicName, isVaulted, rewards });
+});
+
+// Эндпоинт для поиска оптимальных реликвий по списку желаемых частей
+app.post('/api/optimal-relics', express.json(), (req, res) => {
+    const { parts } = req.body;
+
+    if (!Array.isArray(parts) || parts.length === 0) {
+        return res.status(400).json({ error: 'Missing or empty "parts" array.' });
+    }
+
+    // Создаём Set для быстрого поиска
+    const desiredSet = new Set(parts.map(p => p.toLowerCase()));
+    const result = [];
+
+    // Проходим по всем реликвиям из relicRewardsMap
+    for (const [relicBaseName, rewards] of relicRewardsMap.entries()) {
+        // Находим, какие из желаемых частей есть в этой реликвии
+        const matched = rewards.filter(r => desiredSet.has(r.partName.toLowerCase()));
+        if (matched.length === 0) continue;
+
+        // Определяем статус vaulted (возьмём из partToRelicsMap для любой из этих частей)
+        let isVaulted = false;
+        // Ищем любую часть, для которой есть запись в partToRelicsMap с этой реликвией
+        for (const reward of matched) {
+            const entries = partToRelicsMap.get(reward.partName);
+            if (entries) {
+                const entry = entries.find(e => e.relic.name.startsWith(relicBaseName));
+                if (entry) {
+                    isVaulted = entry.relic.vaulted === true;
+                    break;
+                }
+            }
+        }
+
+        result.push({
+            relic: relicBaseName,
+            desiredCount: matched.length,
+            desiredParts: matched.map(r => r.partName),
+            isVaulted,
+            // Можно добавить другие поля при желании
+        });
+    }
+
+    // Сортируем: сначала по количеству совпадений (по убыванию), затем по имени
+    result.sort((a, b) => {
+        if (b.desiredCount !== a.desiredCount) return b.desiredCount - a.desiredCount;
+        return a.relic.localeCompare(b.relic);
+    });
+
+    // Ограничим 50 результатами
+    res.json({ relics: result.slice(0, 50) });
 });
 
 async function initializeAndStart(attempt = 0) {

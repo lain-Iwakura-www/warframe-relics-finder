@@ -66,6 +66,15 @@ function renderWishlist() {
                 saveWishlist(wishlist);
                 renderWishlist();
             });
+            // Кнопка "Find Best Relics"
+            const btnLi = document.createElement('li');
+            btnLi.className = 'wishlist-action';
+            const btn = document.createElement('button');
+            btn.id = 'findBestRelicsBtn';
+            btn.textContent = '🔍 Find Best Relics';
+            btn.addEventListener('click', findBestRelics);
+            btnLi.appendChild(btn);
+            wishlistItems.appendChild(btnLi);
             const nameSpan = document.createElement('span');
             nameSpan.textContent = item.name;
             if (item.obtained) nameSpan.classList.add('obtained');
@@ -359,6 +368,81 @@ function renderRelicDetails(data) {
     });
     document.querySelectorAll('.reward-part').forEach(td => {
         td.addEventListener('click', () => navigateTo({ type: 'part', name: td.dataset.part }));
+    });
+}
+
+async function findBestRelics() {
+    // Собираем все имена частей из желаемого (включая части внутри наборов)
+    const partNames = [];
+    wishlist.forEach(item => {
+        if (item.type === 'part') {
+            partNames.push(item.name);
+        } else if (item.type === 'set') {
+            item.parts.forEach(p => partNames.push(p.name));
+        }
+    });
+
+    // Убираем дубликаты
+    const uniqueParts = [...new Set(partNames)];
+
+    if (!uniqueParts.length) {
+        alert('Your wishlist is empty.');
+        return;
+    }
+
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = '<p>Finding best relics...</p>';
+
+    try {
+        const resp = await fetch('/api/optimal-relics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ parts: uniqueParts })
+        });
+        if (!resp.ok) {
+            resultsDiv.innerHTML = `<p class="error">Error ${resp.status}</p>`;
+            return;
+        }
+        const data = await resp.json();
+        if (!data.relics || data.relics.length === 0) {
+            resultsDiv.innerHTML = '<p>No relics contain any of your desired parts.</p>';
+            return;
+        }
+        renderBestRelics(data.relics);
+    } catch (err) {
+        console.error(err);
+        resultsDiv.innerHTML = '<p class="error">Network error.</p>';
+    }
+}
+
+function renderBestRelics(relics) {
+    let html = '';
+    if (historyStack.length > 0) {
+        html += `<button class="back-btn" onclick="goBack()">← Back</button>`;
+    }
+    html += `<h2>🎯 Best Relics for Your Wishlist</h2>`;
+    html += `<table><thead><tr><th>Relic</th><th>Status</th><th>Desired Parts</th><th>Count</th></tr></thead><tbody>`;
+
+    relics.forEach(r => {
+        const vaultedClass = r.isVaulted ? 'vaulted' : 'not-vaulted';
+        const vaultedText = r.isVaulted ? 'Vaulted' : 'Available';
+        html += `<tr>
+            <td class="relic-name">${escapeHtml(r.relic)}</td>
+            <td class="${vaultedClass}">${vaultedText}</td>
+            <td>${escapeHtml(r.desiredParts.join(', '))}</td>
+            <td>${r.desiredCount}</td>
+        </tr>`;
+    });
+
+    html += `</tbody></table>`;
+    resultsDiv.innerHTML = html;
+
+    // Кликабельность названий реликвий
+    document.querySelectorAll('.relic-name').forEach(td => {
+        td.addEventListener('click', () => {
+            const baseName = td.textContent.trim();
+            navigateTo({ type: 'relic', name: baseName });
+        });
     });
 }
 

@@ -83,3 +83,12 @@ tr:hover td { background: #2a2a4a; }
 .part-link:hover { color: #cf8ff0; }
 .set-table .part-link { color: #e0b0ff; }
 .platinum-price { color: #5cb8ff; font-weight: bold; }
+.wishlist-action {
+    list-style: none;
+    margin-top: 15px;
+    text-align: center;
+}
+.wishlist-action button {
+    padding: 12px 30px;
+    font-size: 16px;
+}
