@@ -146,15 +146,19 @@ function renderWishlist() {
 
 function toggleWishlist(type, name, parts = null) {
     if (type === 'part') {
-        const ex = wishlist.find(item => item.type === 'part' && item.name === name);
-        if (ex) wishlist = wishlist.filter(item => item !== ex);
-        else wishlist.push({ type: 'part', name, obtained: false, addedAt: Date.now() });
+        const existing = wishlist.find(item => item.type === 'part' && item.name === name);
+        if (existing) wishlist = wishlist.filter(item => item !== existing);
+        else {
+            // Берём статус из наборов, если часть уже там есть
+            const obtained = getPartObtained(name);
+            wishlist.push({ type: 'part', name, obtained, addedAt: Date.now() });
+        }
     } else if (type === 'set') {
-        const ex = wishlist.find(item => item.type === 'set' && item.name === name);
-        if (ex) wishlist = wishlist.filter(item => item !== ex);
+        const existing = wishlist.find(item => item.type === 'set' && item.name === name);
+        if (existing) wishlist = wishlist.filter(item => item !== existing);
         else if (parts) {
-            const pa = parts.map(p => ({ name: p.name, obtained: getPartObtained(p.name) }));
-            wishlist.push({ type: 'set', name, parts: pa, addedAt: Date.now() });
+            const partsArray = parts.map(p => ({ name: p.name, obtained: getPartObtained(p.name) }));
+            wishlist.push({ type: 'set', name, parts: partsArray, addedAt: Date.now() });
         }
     }
     saveWishlist(wishlist);

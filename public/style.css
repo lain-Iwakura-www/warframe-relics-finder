@@ -488,22 +488,21 @@ footer a {
 footer a:hover {
     text-decoration: underline;
 }
-/* Панель действий */
-#wishlist-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
+/* Стрелка раскрытия наборов */
+.wishlist-set summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+    font-size: 14px;
+    color: #888;          /* более приглушённый цвет */
 }
-.sort-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #ccc;
-    font-size: 0.9em;
+.wishlist-set[open] summary::before {
+    transform: rotate(90deg);
+    color: #e0b0ff;       /* при открытии становится ярче */
 }
+
+/* Стили для селекта сортировки */
 .sort-label select {
     background: #1e1e34;
     color: #eee;
@@ -512,6 +511,12 @@ footer a:hover {
     padding: 6px 10px;
     font-size: 0.9em;
     cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.sort-label select:focus {
+    outline: none;
+    border-color: #e0b0ff;
+    box-shadow: 0 0 8px rgba(224, 176, 255, 0.3);
 }
 
 /* Переключатель языка */
@@ -535,4 +540,20 @@ footer a:hover {
 .lang-btn:hover {
     border-color: #e0b0ff;
     color: #e0b0ff;
+}
+/* Адаптивность таблиц */
+table {
+    table-layout: auto;       /* вместо fixed, чтобы колонки подстраивались */
+    word-break: break-word;   /* перенос длинных слов */
+    font-size: 0.9em;         /* слегка уменьшим шрифт */
+}
+th, td {
+    padding: 8px 6px;         /* уменьшим отступы, чтобы экономить место */
+}
+/* Уменьшим отступы для очень узких экранов */
+@media (max-width: 600px) {
+    th, td {
+        padding: 6px 4px;
+        font-size: 0.8em;
+    }
 }
