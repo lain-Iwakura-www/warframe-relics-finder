@@ -1,6 +1,4 @@
-const app = express();
-app.use(express.json());   // <-- нужно для парсинга JSON в POST
-app.use(express.static(path.join(__dirname, 'public')));
+const path = require('path');
 const express = require('express');
 const Items = require('@wfcd/items');
 
