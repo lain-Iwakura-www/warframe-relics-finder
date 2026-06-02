@@ -12,6 +12,9 @@ const CONFIG = {
 
 const DUCATS_BY_RARITY = { Common: 15, Uncommon: 45, Rare: 100 };
 
+// Актуальные наборы Prime Resurgence (обновляется вручную)
+const RESURGENCE_WARFRAMES = new Set(['Rhino Prime', 'Nyx Prime']);
+
 let primePartsList = [];
 let partToRelicsMap = null;
 let partRarityMap = new Map();
@@ -19,18 +22,13 @@ let setIndex = new Map();
 let relicRewardsMap = new Map();
 
 const PART_SUFFIXES = [
-    // Основные
     'Blueprint', 'Neuroptics', 'Chassis', 'Systems',
-    // Оружие дальнего боя
     'Barrel', 'Receiver', 'Stock',
-    // Оружие ближнего боя
     'Blade', 'Blades', 'Handle', 'Head', 'Grip', 'Link', 'Gauntlet', 'Gauntlets',
     'Disc', 'Discs', 'Pouch', 'Chain', 'Hilt', 'Guard', 'Ornament',
-    // Косметика и питомцы
     'Lower Limb', 'Upper Limb', 'Pod', 'String', 'Stars', 'Collar', 'Band',
     'Kavat', 'Mask', 'Tail', 'Wings', 'Core', 'Carapace', 'Cerebrum',
-    // Дополнительно
-    'Bow', 'Arrow', 'Quiver', 'Hilt', 'Guard',
+    'Bow', 'Arrow', 'Quiver',
 ];
 const MULTI_WORD_SUFFIXES = ['Lower Limb', 'Upper Limb'];
 
@@ -148,6 +146,17 @@ function calculateDropChances(rarity) {
     return chances;
 }
 
+// Проверка, принадлежит ли реликвия к набору из Prime Resurgence
+function isRelicResurgence(relicBaseName) {
+    for (const [partName, entries] of partToRelicsMap) {
+        const entry = entries.find(e => e.relic.name.startsWith(relicBaseName));
+        if (!entry) continue;
+        const setName = extractSetName(partName);
+        if (RESURGENCE_WARFRAMES.has(setName)) return true;
+    }
+    return false;
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -167,6 +176,19 @@ app.get('/api/search', (req, res) => {
     res.json({ count: matched.length, parts: matched.slice(0, CONFIG.MAX_SEARCH_RESULTS) });
 });
 
+app.get('/api/search-relics', (req, res) => {
+    if (!relicRewardsMap.size) return res.status(503).json({ error: 'Relic index not ready.' });
+    const query = req.query.q?.trim().toLowerCase() || '';
+    const matched = [];
+    for (const relicName of relicRewardsMap.keys()) {
+        if (relicName.toLowerCase().includes(query)) {
+            matched.push(relicName);
+            if (matched.length >= 50) break;
+        }
+    }
+    res.json({ relics: matched });
+});
+
 app.get('/api/relics-for-part', (req, res) => {
     if (!partToRelicsMap) return res.status(503).json({ error: 'Relic index not ready yet.' });
     let partName = req.query.part;
@@ -179,6 +201,7 @@ app.get('/api/relics-for-part', (req, res) => {
         name: relic.name,
         tier: relic.tier || relic.era || 'Unknown',
         isVaulted: relic.vaulted === true,
+        isResurgence: isRelicResurgence(relic.name.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, '')),
         rarity: reward.rarity || 'Common',
         dropChances: calculateDropChances(reward.rarity || 'Common'),
     }));
@@ -225,7 +248,9 @@ app.get('/api/relic-details', (req, res) => {
         const entry = entries.find(e => e.relic.name.startsWith(relicName));
         if (entry) { isVaulted = entry.relic.vaulted === true; break; }
     }
-    res.json({ relicName, isVaulted, rewards });
+
+    const isResurgence = isRelicResurgence(relicName);
+    res.json({ relicName, isVaulted, isResurgence, rewards });
 });
 
 app.post('/api/optimal-relics', (req, res) => {
@@ -261,6 +286,7 @@ app.post('/api/optimal-relics', (req, res) => {
             desiredCount: matched.length,
             desiredParts: matched.map(r => r.partName),
             isVaulted,
+            isResurgence: isRelicResurgence(relicBaseName),
         });
     }
 
@@ -282,10 +308,7 @@ async function initializeAndStart(attempt = 0) {
             setTimeout(() => initializeAndStart(attempt + 1), CONFIG.LOAD_INTERVAL_MS);
             return;
         }
-    } catch (err) {
-        console.error(err);
-        process.exit(1);
-    }
+    } catch (err) { console.error(err); process.exit(1); }
 
     partToRelicsMap = buildRelicIndex(items);
     console.log(`Index built. ${primePartsList.length} prime parts.`);
