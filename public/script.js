@@ -431,12 +431,32 @@ function renderRelicTable(data) {
 // ================== RELIC PAGE ==================
 async function loadRelicDetails(relicName) {
     const base = relicName.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, '');
-    resultsDiv.innerHTML = `<p>${t('loadingRelic')}</p>`;
+    resultsDiv.innerHTML = '<p>Loading...</p>';
     try {
         const resp = await fetch(`${RELIC_DETAILS_URL}?relic=${encodeURIComponent(base)}`);
-        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">${t('error')} ${resp.status}</p>`; return; }
-        renderRelicDetails(await resp.json());
-    } catch (e) { resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
+        if (!resp.ok) {
+            resultsDiv.innerHTML = `<p class="error">${t('error')} ${resp.status}</p>`;
+            return;
+        }
+        // Проверяем, есть ли тело ответа (статус 304 может дать пустое тело)
+        const text = await resp.text();
+        if (!text) {
+            // Кэш пуст – пробуем ещё раз без кэша (на всякий случай)
+            const freshResp = await fetch(`${RELIC_DETAILS_URL}?relic=${encodeURIComponent(base)}`, { cache: 'no-store' });
+            if (!freshResp.ok) {
+                resultsDiv.innerHTML = `<p class="error">${t('error')} ${freshResp.status}</p>`;
+                return;
+            }
+            const data = await freshResp.json();
+            renderRelicDetails(data);
+        } else {
+            const data = JSON.parse(text);
+            renderRelicDetails(data);
+        }
+    } catch (e) {
+        console.error(e);
+        resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`;
+    }
 }
 
 function renderRelicDetails(data) {
