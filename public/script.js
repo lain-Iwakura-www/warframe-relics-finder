@@ -22,7 +22,7 @@ function loadWishlist() {
     try {
         const raw = JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [];
         return raw.map(item => {
-            const newItem = item.type ? item : { type: 'part', name: item.name, obtained: item.obtained || false };
+            const newItem = item.type ? item : { type: 'part', name: item.name || 'Unknown Part', obtained: item.obtained || false };
             if (!newItem.addedAt) newItem.addedAt = Date.now();
             return newItem;
         });
@@ -65,7 +65,9 @@ function syncPartObtained(partName, obtained) {
 
 function sortWishlist(list) {
     const sorted = [...list];
-    if (wishlistSort === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name));
+    if (wishlistSort === 'name') {
+        sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
     else if (wishlistSort === 'obtained') {
         sorted.sort((a, b) => {
             const aOb = (a.type === 'part') ? (a.obtained ? 1 : 0) : a.parts.filter(p => p.obtained).length;
@@ -240,8 +242,10 @@ function toggleWishlist(type, name, parts = null) {
 async function findBestRelics() {
     const partNames = [];
     wishlist.forEach(item => {
-        if (item.type === 'part' && !item.obtained) partNames.push(item.name);
-        else if (item.type === 'set') item.parts.forEach(p => { if (!p.obtained) partNames.push(p.name); });
+        if (item.type === 'part' && !item.obtained && item.name) partNames.push(item.name);
+        else if (item.type === 'set' && item.parts) {
+            item.parts.forEach(p => { if (!p.obtained && p.name) partNames.push(p.name); });
+        }
     });
     const uniqueParts = [...new Set(partNames)];
     if (!uniqueParts.length) { alert(t('allObtained')); return; }
