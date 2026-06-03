@@ -240,10 +240,6 @@ function toggleWishlist(type, name, parts = null) {
     if (currentState) {
         if (currentState.type === 'set' && currentState.name === name) loadSetPage(name);
         else if (currentState.type === 'part' && currentState.name === name) loadRelics(name);
-        else if (currentState.type === 'relic') {
-            // если мы на странице реликвии и меняем вишлист для детали, перезагружаем страницу реликвии
-            loadRelicDetails(currentState.name);
-        }
     }
 }
 
@@ -461,6 +457,15 @@ async function loadRelicDetails(relicName) {
     }
 }
 
+// Проверяет, есть ли часть где-либо в вишлисте (одиночная или внутри набора)
+function isPartInAnyWishlist(partName) {
+    if (wishlist.some(item => item.type === 'part' && item.name === partName)) return true;
+    for (const item of wishlist) {
+        if (item.type === 'set' && item.parts.some(p => p.name === partName)) return true;
+    }
+    return false;
+}
+
 function renderRelicDetails(data) {
     const { relicName, isVaulted, rewards } = data;
     const status = isVaulted ? t('vaulted') : t('available');
@@ -472,7 +477,7 @@ function renderRelicDetails(data) {
 
     rewards.forEach(reward => {
         const chances = reward.dropChances;
-        const inWish = isInWishlist(reward.partName);          // <-- переименовано в inWish для ясности
+        const inWish = isPartInAnyWishlist(reward.partName);          // <-- переименовано в inWish для ясности
         const obtained = inWish ? getPartObtained(reward.partName) : false;
         let badge = '';
         if (inWish) badge = obtained ? ' ✔️' : ' ⭐';
@@ -492,8 +497,40 @@ function renderRelicDetails(data) {
     html += `<p class="drop-locations"><a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a></p>`;
     resultsDiv.innerHTML = html;
 
-    document.querySelectorAll('.wishlist-btn').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); toggleWishlist('part', b.dataset.part); }));
+    document.querySelectorAll('.wishlist-btn').forEach(b => {
+        b.addEventListener('click', (e) => {
+         e.stopPropagation();
+         toggleWishlist('part', b.dataset.part);
+         updateRelicPageButtons(); // вместо перезагрузки всей страницы
+        });
+    });
     document.querySelectorAll('.reward-part').forEach(td => td.addEventListener('click', () => navigateTo({ type: 'part', name: td.dataset.part })));
+}
+
+function updateRelicPageButtons() {
+    // Ищем все кнопки вишлиста на текущей странице реликвии
+    const buttons = resultsDiv.querySelectorAll('.wishlist-btn[data-part]');
+    buttons.forEach(btn => {
+        const partName = btn.dataset.part;
+        const inWish = isPartInAnyWishlist(partName);
+        // Обновляем класс и текст кнопки
+        btn.className = 'wishlist-btn' + (inWish ? ' remove' : '');
+        btn.textContent = inWish ? '❌ Remove' : '➕ Add';
+    });
+
+    // Обновляем значки ⭐/✔️ у наград
+    const rewardCells = resultsDiv.querySelectorAll('.reward-part');
+    rewardCells.forEach(td => {
+        const partName = td.dataset.part;
+        const inWish = isPartInAnyWishlist(partName);
+        const obtained = inWish ? getPartObtained(partName) : false;
+        let badge = '';
+        if (inWish) badge = obtained ? ' ✔️' : ' ⭐';
+        // Удаляем старый badge (если есть) и добавляем новый
+        // Проще: возьмём текстовое содержимое без последних символов
+        const originalText = td.textContent.replace(/[ ⭐✔️]+$/, '');
+        td.innerHTML = escapeHtml(originalText) + badge;
+    });
 }
 
 function escapeHtml(text) { return text.replace(/[&<>"]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m])); }
