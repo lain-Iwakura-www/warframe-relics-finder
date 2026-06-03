@@ -1,3 +1,4 @@
+let wishlistOrder = 'asc'; // 'asc' или 'desc'
 const SEARCH_URL = '/api/search';
 const RELIC_SEARCH_URL = '/api/search-relics';
 const SETS_SEARCH_URL = '/api/search-sets';
@@ -71,9 +72,12 @@ function sortWishlist(list) {
             const bOb = (b.type === 'part') ? (b.obtained ? 1 : 0) : b.parts.filter(p => p.obtained).length;
             return aOb - bOb;
         });
+    if (wishlistOrder === 'desc') sorted.reverse();
+        return sorted;
     }
     return sorted;
 }
+
 
 function renderWishlist() {
     const openSets = new Set();
@@ -105,6 +109,17 @@ function renderWishlist() {
         bestRelicsBtn.addEventListener('click', findBestRelics);
         wishlistActions.appendChild(bestRelicsBtn);
     }
+        // Кнопка направления сортировки
+    const orderBtn = document.createElement('button');
+    orderBtn.id = 'sortOrderBtn';
+    orderBtn.textContent = wishlistOrder === 'asc' ? '↑' : '↓';
+    orderBtn.title = wishlistOrder === 'asc' ? 'Sort ascending' : 'Sort descending';
+    orderBtn.className = 'sort-order-btn';
+    orderBtn.addEventListener('click', () => {
+        wishlistOrder = wishlistOrder === 'asc' ? 'desc' : 'asc';
+        renderWishlist();
+    });
+    wishlistActions.appendChild(orderBtn);
 
     if (!wishlist.length) {
         wishlistItems.innerHTML = `<li class="empty">${t('nothingAdded')}</li>`;
@@ -194,6 +209,10 @@ function renderWishlist() {
     if (currentState && currentState.type === 'set') {
         loadSetPage(currentState.name);
     }
+        // Автообновление страницы реликвии, если она открыта
+    if (currentState && currentState.type === 'relic') {
+        loadRelicDetails(currentState.name);
+    }
 }
 
 function toggleWishlist(type, name, parts = null) {
@@ -241,7 +260,7 @@ function renderBestRelics(relics) {
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     html += `<h2>${t('bestRelicsTitle')}</h2>`;
-    html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnlyBest"> ${t('showAvailableOnly')}</label></div>`;
+    html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnlyBest" checked> ${t('showAvailableOnly')}</label></div>`;
     html += `<table id="bestRelicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th><th>${t('missingParts')}</th><th>${t('count')}</th></tr></thead><tbody>`;
     relics.forEach(r => {
         const status = r.isVaulted ? t('vaulted') : t('available');
@@ -252,6 +271,13 @@ function renderBestRelics(relics) {
     });
     html += `</tbody></table>`;
     resultsDiv.innerHTML = html;
+    // Автоприменение фильтра «доступные только»
+    const filterCheckbox = document.getElementById('showAvailableOnlyBest');
+    if (filterCheckbox && filterCheckbox.checked) {
+        document.querySelectorAll('#bestRelicsTable tbody tr').forEach(row => {
+            if (row.classList.contains('vaulted-row')) row.style.display = 'none';
+        });
+    }
     document.getElementById('showAvailableOnlyBest')?.addEventListener('change', function() {
         document.querySelectorAll('#bestRelicsTable tbody tr').forEach(row => {
             row.style.display = (this.checked && row.classList.contains('vaulted-row')) ? 'none' : '';
@@ -473,7 +499,7 @@ function renderRelicDetails(data) {
     });
 
     html += `</tbody></table>`;
-    html += `<p class="drop-locations"><a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a></p>`;
+    html += `<p class="drop-locations">${t('dropLocations')} <a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a></p>`;
     resultsDiv.innerHTML = html;
 
     document.querySelectorAll('.wishlist-btn:not(.in-set)').forEach(b => {

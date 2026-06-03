@@ -54,6 +54,7 @@ const TRANSLATIONS = {
         resurgenceLinkText: 'Prime Resurgence',
         resurgenceDescription: 'During Prime Resurgence, Warframes can be obtained from Relics purchased for Aya.',
         rarityDisclaimer: 'Rarity data sourced from @wfcd/items, may contain inaccuracies.',
+        dropLocations: 'Missions where this relic drops:',
     },
     ru: {
         title: 'Warframe Relic Finder',
@@ -110,6 +111,7 @@ const TRANSLATIONS = {
         resurgenceLinkText: 'Возрождение Прайм',
         resurgenceDescription: 'В рамках «Возрождения Прайм» варфреймы можно получить из Реликвий, купленных за Айю.',
         rarityDisclaimer: 'Данные о редкости взяты из @wfcd/items и могут содержать неточности.',
+        dropLocations: 'Миссии, на которых падает реликвия:',
     }
 };
 

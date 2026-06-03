@@ -689,3 +689,17 @@ th, td {
     min-height: 120px;
     transition: min-height 0.2s ease;
 }
+.sort-order-btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #eee;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: background 0.2s;
+}
+.sort-order-btn:hover {
+    background: #2a2a4a;
+}
