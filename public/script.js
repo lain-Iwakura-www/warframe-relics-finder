@@ -36,12 +36,16 @@ function isInWishlist(partName) {
 function isSetInWishlist(setName) {
     return wishlist.some(item => item.type === 'set' && item.name === setName);
 }
+function isPartInAnyWishlist(partName) {
+    if (isInWishlist(partName)) return true;
+    for (const item of wishlist) {
+        if (item.type === 'set' && item.parts.some(p => p.name === partName)) return true;
+    }
+    return false;
+}
 function getPartObtained(partName) {
-    // 1. Ищем отдельную запись (type: 'part')
     const partEntry = wishlist.find(item => item.type === 'part' && item.name === partName);
     if (partEntry) return partEntry.obtained;
-
-    // 2. Если отдельной записи нет, ищем внутри наборов
     for (const item of wishlist) {
         if (item.type === 'set') {
             const partInSet = item.parts.find(p => p.name === partName);
@@ -49,17 +53,7 @@ function getPartObtained(partName) {
         }
     }
     return false;
-}    
-
-function countObtained(item) {
-    if (item.type === 'part') {
-        return item.obtained ? 1 : 0;
-    } else { // тип 'set'
-        return item.parts.filter(p => p.obtained).length;
-    }
-
 }
-
 function syncPartObtained(partName, obtained) {
     wishlist.forEach(item => {
         if (item.type === 'part' && item.name === partName) item.obtained = obtained;
@@ -73,18 +67,12 @@ function sortWishlist(list) {
     if (wishlistSort === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name));
     else if (wishlistSort === 'obtained') {
         sorted.sort((a, b) => {
-            const countA = countObtained(a);
-            const countB = countObtained(b);
-            return countA - countB;  // сначала невыбитые (0), потом выбитые (1 и больше)
+            const aOb = (a.type === 'part') ? (a.obtained ? 1 : 0) : a.parts.filter(p => p.obtained).length;
+            const bOb = (b.type === 'part') ? (b.obtained ? 1 : 0) : b.parts.filter(p => p.obtained).length;
+            return aOb - bOb;
         });
     }
     return sorted;
-}
-
-function updateRelicPageButtonsIfNeeded() {
-    if (currentState && currentState.type === 'relic') {
-        updateRelicPageButtons();
-    }
 }
 
 function renderWishlist() {
@@ -127,18 +115,14 @@ function renderWishlist() {
     wishlistItems.innerHTML = '';
 
     sorted.forEach((item) => {
-        // Ищем реальный индекс в исходном массиве
         const originalIndex = wishlist.indexOf(item);
 
         if (item.type === 'part') {
             const li = document.createElement('li');
             li.className = 'wishlist-item';
             const cb = document.createElement('input');
-            cb.type = 'checkbox';
-            cb.checked = item.obtained;
-            cb.title = t('owned');
+            cb.type = 'checkbox'; cb.checked = item.obtained; cb.title = t('owned');
             cb.addEventListener('change', () => {
-                // Меняем напрямую в оригинальном массиве
                 wishlist[originalIndex].obtained = cb.checked;
                 syncPartObtained(item.name, cb.checked);
                 saveWishlist(wishlist);
@@ -147,28 +131,13 @@ function renderWishlist() {
             const span = document.createElement('span');
             span.textContent = item.name;
             if (item.obtained) span.classList.add('obtained');
-            span.addEventListener('click', () => {
-                searchInput.value = item.name;
-                navigateTo({ type: 'part', name: item.name });
-            });
+            span.addEventListener('click', () => { searchInput.value = item.name; navigateTo({ type: 'part', name: item.name }); });
             const del = document.createElement('button');
-            del.className = 'delete-btn';
-            del.innerHTML = '×';
-            del.title = t('delete');
-            del.addEventListener('click', (e) => {
-                e.stopPropagation();
-                wishlist.splice(originalIndex, 1);
-                saveWishlist(wishlist);
-                renderWishlist();
-                if (currentState?.type === 'part' && currentState.name === item.name) refreshCurrentPage();
-            });
-            li.appendChild(cb);
-            li.appendChild(span);
-            li.appendChild(del);
+            del.className = 'delete-btn'; del.innerHTML = '×'; del.title = t('delete');
+            del.addEventListener('click', (e) => { e.stopPropagation(); wishlist.splice(originalIndex, 1); saveWishlist(wishlist); renderWishlist(); });
+            li.appendChild(cb); li.appendChild(span); li.appendChild(del);
             wishlistItems.appendChild(li);
-
         } else if (item.type === 'set') {
-    // Оборачиваем details и кнопку удаления в общий контейнер
             const wrapper = document.createElement('div');
             wrapper.className = 'wishlist-set-wrapper';
 
@@ -179,40 +148,12 @@ function renderWishlist() {
 
             const summary = document.createElement('summary');
             summary.innerHTML = `<span class="wishlist-set-name">📦 ${escapeHtml(item.name)}</span>`;
-            // Кнопку удаления больше не кладём в summary
             details.appendChild(summary);
-            // Клик по названию набора → переход на страницу набора
-            const nameSpan = summary.querySelector('.wishlist-set-name');
-            if (nameSpan) {
-                nameSpan.style.cursor = 'pointer';
-                nameSpan.addEventListener('click', (e) => {
-                    e.stopPropagation();        // не даём details переключиться
-                    navigateTo({ type: 'set', name: item.name });
-                });
-            }
-            // Кликабельное название набора
-            const nameSpan = summary.querySelector('.wishlist-set-name');
-            if (nameSpan) {
-                nameSpan.style.cursor = 'pointer';
-                nameSpan.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigateTo({ type: 'set', name: item.name });
-                });
-            }
-            // Кнопка удаления теперь снаружи details
+
             const delSet = document.createElement('button');
             delSet.className = 'delete-btn set-delete-btn';
-            delSet.innerHTML = '×';
-            delSet.title = t('deleteSet');
-            delSet.addEventListener('click', (e) => {
-                e.stopPropagation();
-                wishlist.splice(originalIndex, 1);
-                saveWishlist(wishlist);
-                renderWishlist();
-                if (currentState?.type === 'set' && currentState.name === item.name) refreshCurrentPage();
-            });
-
+            delSet.innerHTML = '×'; delSet.title = t('deleteSet');
+            delSet.addEventListener('click', (e) => { e.stopPropagation(); wishlist.splice(originalIndex, 1); saveWishlist(wishlist); renderWishlist(); });
             wrapper.appendChild(details);
             wrapper.appendChild(delSet);
 
@@ -238,9 +179,20 @@ function renderWishlist() {
             });
             details.appendChild(partsList);
             wishlistItems.appendChild(wrapper);
+
+            // Кликабельное название набора
+            const nameSpan = summary.querySelector('.wishlist-set-name');
+            if (nameSpan) {
+                nameSpan.style.cursor = 'pointer';
+                nameSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    navigateTo({ type: 'set', name: item.name });
+                });
+            }
         }
     });
-    updateRelicPageButtonsIfNeeded();
+
+    // Автообновление страницы набора, если она открыта
     if (currentState && currentState.type === 'set') {
         loadSetPage(currentState.name);
     }
@@ -250,10 +202,7 @@ function toggleWishlist(type, name, parts = null) {
     if (type === 'part') {
         const ex = wishlist.find(item => item.type === 'part' && item.name === name);
         if (ex) wishlist = wishlist.filter(item => item !== ex);
-        else {
-            const obtained = getPartObtained(name);
-            wishlist.push({ type: 'part', name, obtained, addedAt: Date.now() });
-        }
+        else wishlist.push({ type: 'part', name, obtained: getPartObtained(name), addedAt: Date.now() });
     } else if (type === 'set') {
         const ex = wishlist.find(item => item.type === 'set' && item.name === name);
         if (ex) wishlist = wishlist.filter(item => item !== ex);
@@ -264,7 +213,6 @@ function toggleWishlist(type, name, parts = null) {
     }
     saveWishlist(wishlist);
     renderWishlist();
-    // Обновляем текущую страницу, если она соответствует изменённому элементу
     if (currentState) {
         if (currentState.type === 'set' && currentState.name === name) loadSetPage(name);
         else if (currentState.type === 'part' && currentState.name === name) loadRelics(name);
@@ -298,8 +246,8 @@ function renderBestRelics(relics) {
     html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnlyBest"> ${t('showAvailableOnly')}</label></div>`;
     html += `<table id="bestRelicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th><th>${t('missingParts')}</th><th>${t('count')}</th></tr></thead><tbody>`;
     relics.forEach(r => {
-        const status = (r.isVaulted ? t('vaulted') : t('available'));
-        const cls = (r.isVaulted ? 'vaulted' : 'not-vaulted');
+        const status = r.isVaulted ? t('vaulted') : t('available');
+        const cls = r.isVaulted ? 'vaulted' : 'not-vaulted';
         const rowCls = r.isVaulted ? 'vaulted-row' : 'available-row';
         const safeParts = r.desiredParts.map(escapeHtml).join(', ');
         html += `<tr class="${rowCls}"><td class="relic-name">${escapeHtml(r.relic)}</td><td class="${cls}">${status}</td><td>${safeParts}</td><td>${r.desiredCount}</td></tr>`;
@@ -385,10 +333,7 @@ function renderSetPage(data) {
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     html += `<div class="set-info"><h2>📦 ${escapeHtml(setName)}</h2><button class="${btnClass}" id="toggleSetBtn">${btnText}</button></div>`;
-
-    html += `<table class="set-table"><thead><tr>
-        <th>${t('part')}</th><th>${t('rarity')}</th><th>${t('relics')}</th><th>${t('ducats')}</th>
-    </tr></thead><tbody>`;
+    html += `<table class="set-table"><thead><tr><th>${t('part')}</th><th>${t('rarity')}</th><th>${t('relics')}</th><th>${t('ducats')}</th></tr></thead><tbody>`;
 
     parts.forEach(part => {
         const obtained = getPartObtained(part.name);
@@ -404,9 +349,7 @@ function renderSetPage(data) {
     html += `</tbody></table>`;
     resultsDiv.innerHTML = html;
 
-    document.getElementById('toggleSetBtn').addEventListener('click', () => {
-        toggleWishlist('set', setName, parts);
-    });
+    document.getElementById('toggleSetBtn').addEventListener('click', () => toggleWishlist('set', setName, parts));
     document.querySelectorAll('.part-link').forEach(link => {
         link.addEventListener('click', () => navigateTo({ type: 'part', name: link.dataset.part }));
     });
@@ -437,40 +380,30 @@ function renderRelicTable(data) {
     const chances = unique[0]?.dropChances || {};
     const ducats = data.ducats || 0;
     const inWish = isInWishlist(data.part);
+    const inAny = isPartInAnyWishlist(data.part);
     const btnText = inWish ? t('removeFromWishlist') : t('addToWishlist');
     const btnClass = inWish ? 'wishlist-btn remove' : 'wishlist-btn';
+    const setName = data.setName;
+
+    let wishlistTag = '';
+    if (inWish) wishlistTag = ' ⭐ In wishlist';
+    else if (inAny) wishlistTag = ' 📦 Part of set';
 
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
-    const display = data.setName && data.part.startsWith(data.setName + ' ') ? `<a class="set-link">${escapeHtml(data.setName)}</a>${escapeHtml(data.part.slice(data.setName.length))}` : escapeHtml(data.part);
-    const hasSeparate = isInWishlist(data.part);
-    const inAny = isPartInAnyWishlist(data.part);
-    let wishlistTag = '';
-    if (hasSeparate) {
-        wishlistTag = ' ⭐ In wishlist';
-    } else if (inAny) {
-        wishlistTag = ' 📦 Part of set';
-    }
-
-    html += `<div class="part-info"><h2>${partDisplay}${wishlistTag}</h2><button class="${btnClass}">${btnText}</button></div>`;
+    const display = setName && data.part.startsWith(setName + ' ') ? `<a class="set-link">${escapeHtml(setName)}</a>${escapeHtml(data.part.slice(setName.length))}` : escapeHtml(data.part);
+    html += `<div class="part-info"><h2>${display}${wishlistTag}</h2><button class="${btnClass}">${btnText}</button></div>`;
     html += `<div class="rarity-info"><span>${t('rarity')} <strong>${rarity}</strong></span> <span class="chances-summary">(Intact: ${chances.Intact} | Exceptional: ${chances.Exceptional} | Flawless: ${chances.Flawless} | Radiant: ${chances.Radiant})</span> <span class="ducats">| ${ducats} ${t('ducats')}</span><span class="platinum-price">| ${t('platinumNA')}</span></div>`;
     html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnly" checked> ${t('showAvailableOnly')}</label></div>`;
     html += `<table id="relicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th></tr></thead><tbody>`;
     unique.forEach(r => {
-        const status = (r.isVaulted ? t('vaulted') : t('available'));
-        const cls = (r.isVaulted ? 'vaulted' : 'not-vaulted');
+        const status = r.isVaulted ? t('vaulted') : t('available');
+        const cls = r.isVaulted ? 'vaulted' : 'not-vaulted';
         const rowCls = r.isVaulted ? 'vaulted-row' : 'available-row';
         html += `<tr class="${rowCls}"><td class="relic-name" data-full-name="${escapeHtml(r.fullName)}">${r.name}</td><td class="${cls}">${status}</td></tr>`;
     });
     html += `</tbody></table>`;
     resultsDiv.innerHTML = html;
-    // Автоприменение фильтра «доступные только»
-    const filterCheckbox = document.getElementById('showAvailableOnly');
-    if (filterCheckbox && filterCheckbox.checked) {
-        document.querySelectorAll('#relicsTable tbody tr').forEach(row => {
-            if (row.classList.contains('vaulted-row')) row.style.display = 'none';
-        });
-    }
 
     document.querySelector('.wishlist-btn')?.addEventListener('click', () => toggleWishlist('part', data.part));
     document.getElementById('showAvailableOnly')?.addEventListener('change', function() {
@@ -478,49 +411,29 @@ function renderRelicTable(data) {
             row.style.display = (this.checked && row.classList.contains('vaulted-row')) ? 'none' : '';
         });
     });
+    // Принудительно применить фильтр при первой загрузке
+    const filterCheckbox = document.getElementById('showAvailableOnly');
+    if (filterCheckbox && filterCheckbox.checked) {
+        document.querySelectorAll('#relicsTable tbody tr').forEach(row => {
+            if (row.classList.contains('vaulted-row')) row.style.display = 'none';
+        });
+    }
     document.querySelectorAll('.relic-name').forEach(td => td.addEventListener('click', () => {
         navigateTo({ type: 'relic', name: td.dataset.fullName.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, '') });
     }));
-    document.querySelector('.set-link')?.addEventListener('click', () => navigateTo({ type: 'set', name: data.setName }));
+    document.querySelector('.set-link')?.addEventListener('click', () => navigateTo({ type: 'set', name: setName }));
 }
 
 // ================== RELIC PAGE ==================
 async function loadRelicDetails(relicName) {
     const base = relicName.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, '');
-    resultsDiv.innerHTML = '<p>Loading...</p>';
+    resultsDiv.innerHTML = `<p>${t('loadingRelic')}</p>`;
     try {
         const resp = await fetch(`${RELIC_DETAILS_URL}?relic=${encodeURIComponent(base)}`);
-        if (!resp.ok) {
-            resultsDiv.innerHTML = `<p class="error">${t('error')} ${resp.status}</p>`;
-            return;
-        }
-        const text = await resp.text();
-        if (!text) {
-            // Пустой ответ – повторяем без кэша
-            const freshResp = await fetch(`${RELIC_DETAILS_URL}?relic=${encodeURIComponent(base)}`, { cache: 'no-store' });
-            if (!freshResp.ok) {
-                resultsDiv.innerHTML = `<p class="error">${t('error')} ${freshResp.status}</p>`;
-                return;
-            }
-            const data = await freshResp.json();
-            renderRelicDetails(data);
-        } else {
-            const data = JSON.parse(text);
-            renderRelicDetails(data);
-        }
-    } catch (e) {
-        console.error(e);
-        resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`;
-    }
-}
-
-// Проверяет, есть ли часть где-либо в вишлисте (одиночная или внутри набора)
-function isPartInAnyWishlist(partName) {
-    if (wishlist.some(item => item.type === 'part' && item.name === partName)) return true;
-    for (const item of wishlist) {
-        if (item.type === 'set' && item.parts.some(p => p.name === partName)) return true;
-    }
-    return false;
+        if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">${t('error')} ${resp.status}</p>`; return; }
+        const data = await resp.json();
+        renderRelicDetails(data);
+    } catch (e) { resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
 }
 
 function renderRelicDetails(data) {
@@ -530,12 +443,7 @@ function renderRelicDetails(data) {
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     html += `<div class="relic-info"><h2>${escapeHtml(relicName)}</h2><p>${t('status')}: <span class="${cls}">${status}</span></p></div>`;
-    html += `<table class="rewards-table"><thead><tr>
-        <th>${t('reward')}</th><th>${t('rarity')}</th>
-        <th>${t('intact')}</th><th>${t('exceptional')}</th>
-        <th>${t('flawless')}</th><th>${t('radiant')}</th>
-        <th>${t('ducats')}</th><th></th>
-    </tr></thead><tbody>`;
+    html += `<table class="rewards-table"><thead><tr><th>${t('reward')}</th><th>${t('rarity')}</th><th>${t('intact')}</th><th>${t('exceptional')}</th><th>${t('flawless')}</th><th>${t('radiant')}</th><th>${t('ducats')}</th><th></th></tr></thead><tbody>`;
 
     rewards.forEach(reward => {
         const chances = reward.dropChances;
@@ -567,44 +475,33 @@ function renderRelicDetails(data) {
     });
 
     html += `</tbody></table>`;
-    html += `<p class="drop-locations">
-        <a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> |
-        <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a>
-    </p>`;
+    html += `<p class="drop-locations"><a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a></p>`;
     resultsDiv.innerHTML = html;
 
     document.querySelectorAll('.wishlist-btn:not(.in-set)').forEach(b => {
-        b.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleWishlist('part', b.dataset.part);
-        });
+        b.addEventListener('click', (e) => { e.stopPropagation(); toggleWishlist('part', b.dataset.part); updateRelicPageButtons(); });
     });
-    document.querySelectorAll('.reward-part').forEach(td => {
-        td.addEventListener('click', () => navigateTo({ type: 'part', name: td.dataset.part }));
-    });
+    document.querySelectorAll('.reward-part').forEach(td => td.addEventListener('click', () => navigateTo({ type: 'part', name: td.dataset.part })));
 }
 
 function updateRelicPageButtons() {
     const buttons = resultsDiv.querySelectorAll('.wishlist-btn[data-part]');
     buttons.forEach(btn => {
         const partName = btn.dataset.part;
-        const hasSeparate = isInWishlist(partName);           // отдельная запись
-        const inAny = isPartInAnyWishlist(partName);          // в любом виде
+        const hasSeparate = isInWishlist(partName);
+        const inAny = isPartInAnyWishlist(partName);
 
         if (hasSeparate) {
-            // Есть отдельная запись – можно удалить
             btn.className = 'wishlist-btn remove';
             btn.textContent = '❌ Remove';
             btn.disabled = false;
             btn.style.display = '';
         } else if (inAny) {
-            // Только в наборе – заменяем кнопку на текст
             btn.className = 'wishlist-btn in-set';
             btn.textContent = '📦 In set';
             btn.disabled = true;
             btn.style.display = '';
         } else {
-            // Нет в вишлисте – можно добавить
             btn.className = 'wishlist-btn';
             btn.textContent = '➕ Add';
             btn.disabled = false;
@@ -612,7 +509,6 @@ function updateRelicPageButtons() {
         }
     });
 
-    // Обновляем значки ⭐/✔️ у названий наград
     const rewardCells = resultsDiv.querySelectorAll('.reward-part');
     rewardCells.forEach(td => {
         const partName = td.dataset.part;
@@ -620,13 +516,14 @@ function updateRelicPageButtons() {
         const obtained = inAny ? getPartObtained(partName) : false;
         let badge = '';
         if (inAny) badge = obtained ? ' ✔️' : ' ⭐';
-        // Убираем старый badge (если был) и добавляем новый
         const cleanText = td.textContent.replace(/[ ⭐✔️]+$/, '');
         td.innerHTML = escapeHtml(cleanText) + badge;
     });
 }
 
-function escapeHtml(text) { return text.replace(/[&<>"]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m])); }
+function escapeHtml(text) {
+    return text.replace(/[&<>"]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]));
+}
 
 // ================== EVENTS ==================
 const handleInput = debounce(async (e) => {
@@ -645,5 +542,25 @@ searchInput.addEventListener('keydown', (e) => {
     }
 });
 
+// Инициализация языка (использует глобальные функции из lang.js)
+document.getElementById('btnEn').addEventListener('click', () => setLanguage('en'));
+document.getElementById('btnRu').addEventListener('click', () => setLanguage('ru'));
+applyLanguage();
+document.querySelector('.disclaimer').textContent = t('disclaimer');
+document.querySelector('.rarity-disclaimer').textContent = t('rarityDisclaimer');
+document.getElementById('headerTitle').textContent = t('title');
+
+function updateResurgenceLink() {
+    const link = document.querySelector('.resurgence-link');
+    if (link) {
+        link.href = currentLang === 'ru' ? 'https://www.warframe.com/ru/prime-resurgence' : 'https://www.warframe.com/prime-resurgence';
+    }
+}
+updateResurgenceLink();
+const originalSetLanguage = setLanguage;
+setLanguage = function(lang) {
+    originalSetLanguage(lang);
+    updateResurgenceLink();
+};
+
 renderWishlist();
-applyLanguage();  // Применить язык при загрузке
