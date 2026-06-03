@@ -220,26 +220,30 @@ function renderWishlist() {
 
 function toggleWishlist(type, name, parts = null) {
     if (type === 'part') {
-        const existing = wishlist.find(item => item.type === 'part' && item.name === name);
-        if (existing) wishlist = wishlist.filter(item => item !== existing);
+        const ex = wishlist.find(item => item.type === 'part' && item.name === name);
+        if (ex) wishlist = wishlist.filter(item => item !== ex);
         else {
-            // Берём статус из наборов, если часть уже там есть
             const obtained = getPartObtained(name);
             wishlist.push({ type: 'part', name, obtained, addedAt: Date.now() });
         }
     } else if (type === 'set') {
-        const existing = wishlist.find(item => item.type === 'set' && item.name === name);
-        if (existing) wishlist = wishlist.filter(item => item !== existing);
+        const ex = wishlist.find(item => item.type === 'set' && item.name === name);
+        if (ex) wishlist = wishlist.filter(item => item !== ex);
         else if (parts) {
-            const partsArray = parts.map(p => ({ name: p.name, obtained: getPartObtained(p.name) }));
-            wishlist.push({ type: 'set', name, parts: partsArray, addedAt: Date.now() });
+            const pa = parts.map(p => ({ name: p.name, obtained: getPartObtained(p.name) }));
+            wishlist.push({ type: 'set', name, parts: pa, addedAt: Date.now() });
         }
     }
     saveWishlist(wishlist);
     renderWishlist();
+    // Обновляем текущую страницу, если она соответствует изменённому элементу
     if (currentState) {
         if (currentState.type === 'set' && currentState.name === name) loadSetPage(name);
         else if (currentState.type === 'part' && currentState.name === name) loadRelics(name);
+        else if (currentState.type === 'relic') {
+            // если мы на странице реликвии и меняем вишлист для детали, перезагружаем страницу реликвии
+            loadRelicDetails(currentState.name);
+        }
     }
 }
 
@@ -469,7 +473,7 @@ function renderRelicDetails(data) {
     rewards.forEach(reward => {   // <-- reward объявлен здесь
         const chances = reward.dropChances;
         const inWish = isInWishlist(reward.partName);
-        const obtained = inWish ? getPartObtained(reward.partName) : false;
+        const obtained = inWishlist ? getPartObtained(reward.partName) : false;
         let badge = '';
         if (inWish) badge = obtained ? ' ✔️' : ' ⭐';
         html += `<tr>

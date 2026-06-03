@@ -581,23 +581,52 @@ th, td {
     }
 }
 
-/* Контейнер набора (обёртка для details + кнопка удаления) */
+/* Контейнер набора (details + кнопка удаления) */
 .wishlist-set-wrapper {
     display: flex;
     align-items: flex-start;
     gap: 4px;
     margin: 6px 0;
+    /* Занимаем всю ширину сетки */
+    grid-column: 1 / -1;
+    background: rgba(30,30,52,0.8);
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+.wishlist-set-wrapper:has(details[open]) {
+    border-color: rgba(224,176,255,0.3);
 }
 .wishlist-set-wrapper .wishlist-set {
     flex: 1;
+    background: transparent;
+    border: none;
+    margin: 0;
+    box-shadow: none;
 }
+/* Стили для блока details внутри wrapper */
+.wishlist-set {
+    border-radius: 8px;
+    overflow: hidden;
+}
+.wishlist-set summary {
+    padding: 12px;
+    cursor: pointer;
+    list-style: none;
+    background: transparent;
+    transition: background 0.2s;
+}
+.wishlist-set summary:hover {
+    background: rgba(37,37,69,0.9);
+}
+/* Кнопка удаления набора */
 .set-delete-btn {
     background: none;
     border: none;
     color: #ff6b6b;
     font-size: 20px;
     cursor: pointer;
-    padding: 10px 5px;
+    padding: 10px 8px;
     line-height: 1;
     transition: transform 0.2s, color 0.2s;
     margin-top: 6px;
@@ -605,4 +634,17 @@ th, td {
 .set-delete-btn:hover {
     transform: scale(1.2);
     color: #ff4444;
+}
+/* Восстановим стрелку раскрытия */
+.wishlist-set summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+    font-size: 14px;
+    color: #888;
+}
+.wishlist-set[open] summary::before {
+    transform: rotate(90deg);
+    color: #e0b0ff;
 }
