@@ -81,6 +81,12 @@ function sortWishlist(list) {
     return sorted;
 }
 
+function updateRelicPageButtonsIfNeeded() {
+    if (currentState && currentState.type === 'relic') {
+        updateRelicPageButtons();
+    }
+}
+
 function renderWishlist() {
     const openSets = new Set();
     document.querySelectorAll('.wishlist-set[open]').forEach(d => {
@@ -216,6 +222,7 @@ function renderWishlist() {
             wishlistItems.appendChild(wrapper);
         }
     });
+    updateRelicPageButtonsIfNeeded();
 }
 
 function toggleWishlist(type, name, parts = null) {
@@ -477,20 +484,17 @@ function renderRelicDetails(data) {
 
     rewards.forEach(reward => {
         const chances = reward.dropChances;
-        const inWish = isPartInAnyWishlist(reward.partName);          // <-- переименовано в inWish для ясности
-        const obtained = inWish ? getPartObtained(reward.partName) : false;
-        let badge = '';
-        if (inWish) badge = obtained ? ' ✔️' : ' ⭐';
-        html += `<tr>
-            <td class="reward-part" data-part="${escapeHtml(reward.partName)}">${escapeHtml(reward.partName)}${badge}</td>
-            <td>${reward.rarity}</td>
-            <td>${chances.Intact}</td>
-            <td>${chances.Exceptional}</td>
-            <td>${chances.Flawless}</td>
-            <td>${chances.Radiant}</td>
-            <td>${reward.ducats}</td>
-            <td><button class="wishlist-btn ${inWish ? 'remove' : ''}" data-part="${escapeHtml(reward.partName)}">${inWish ? '❌ Remove' : '➕ Add'}</button></td>
-        </tr>`;
+        const hasSeparate = isInWishlist(reward.partName);    // отдельная запись
+        const inAny = isPartInAnyWishlist(reward.partName);   // в любом виде
+
+        let btnHtml;
+        if (hasSeparate) {
+            btnHtml = `<button class="wishlist-btn remove" data-part="${escapeHtml(reward.partName)}">❌ Remove</button>`;
+        } else if (inAny) {
+             btnHtml = `<button class="wishlist-btn in-set" data-part="${escapeHtml(reward.partName)}" disabled>📦 In set</button>`;
+        } else {
+            btnHtml = `<button class="wishlist-btn" data-part="${escapeHtml(reward.partName)}">➕ Add</button>`;
+        }
     });
 
     html += `</tbody></table>`;
@@ -508,28 +512,44 @@ function renderRelicDetails(data) {
 }
 
 function updateRelicPageButtons() {
-    // Ищем все кнопки вишлиста на текущей странице реликвии
     const buttons = resultsDiv.querySelectorAll('.wishlist-btn[data-part]');
     buttons.forEach(btn => {
         const partName = btn.dataset.part;
-        const inWish = isPartInAnyWishlist(partName);
-        // Обновляем класс и текст кнопки
-        btn.className = 'wishlist-btn' + (inWish ? ' remove' : '');
-        btn.textContent = inWish ? '❌ Remove' : '➕ Add';
+        const hasSeparate = isInWishlist(partName);           // отдельная запись
+        const inAny = isPartInAnyWishlist(partName);          // в любом виде
+
+        if (hasSeparate) {
+            // Есть отдельная запись – можно удалить
+            btn.className = 'wishlist-btn remove';
+            btn.textContent = '❌ Remove';
+            btn.disabled = false;
+            btn.style.display = '';
+        } else if (inAny) {
+            // Только в наборе – заменяем кнопку на текст
+            btn.className = 'wishlist-btn in-set';
+            btn.textContent = '📦 In set';
+            btn.disabled = true;
+            btn.style.display = '';
+        } else {
+            // Нет в вишлисте – можно добавить
+            btn.className = 'wishlist-btn';
+            btn.textContent = '➕ Add';
+            btn.disabled = false;
+            btn.style.display = '';
+        }
     });
 
-    // Обновляем значки ⭐/✔️ у наград
+    // Обновляем значки ⭐/✔️ у названий наград
     const rewardCells = resultsDiv.querySelectorAll('.reward-part');
     rewardCells.forEach(td => {
         const partName = td.dataset.part;
-        const inWish = isPartInAnyWishlist(partName);
-        const obtained = inWish ? getPartObtained(partName) : false;
+        const inAny = isPartInAnyWishlist(partName);
+        const obtained = inAny ? getPartObtained(partName) : false;
         let badge = '';
-        if (inWish) badge = obtained ? ' ✔️' : ' ⭐';
-        // Удаляем старый badge (если есть) и добавляем новый
-        // Проще: возьмём текстовое содержимое без последних символов
-        const originalText = td.textContent.replace(/[ ⭐✔️]+$/, '');
-        td.innerHTML = escapeHtml(originalText) + badge;
+        if (inAny) badge = obtained ? ' ✔️' : ' ⭐';
+        // Убираем старый badge (если был) и добавляем новый
+        const cleanText = td.textContent.replace(/[ ⭐✔️]+$/, '');
+        td.innerHTML = escapeHtml(cleanText) + badge;
     });
 }
 

@@ -678,3 +678,14 @@ th, td {
     top: 12px;                /* чуть ниже, так как высота summary другая */
     transform: none;
 }
+.wishlist-btn.in-set {
+    background: #3a3a5a;
+    color: #aaa;
+    cursor: default;
+    box-shadow: none;
+}
+.wishlist-btn.in-set:hover {
+    background: #3a3a5a;
+    transform: none;
+    box-shadow: none;
+}
