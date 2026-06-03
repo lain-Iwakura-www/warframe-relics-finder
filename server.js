@@ -1,4 +1,3 @@
-const Fuse = require('fuse.js');
 const express = require('express');
 const path = require('path');
 const Items = require('@wfcd/items');
@@ -166,34 +165,23 @@ app.get('/api/search', (req, res) => {
     const query = req.query.q?.trim();
     if (!query || query.length < CONFIG.MIN_SEARCH_LENGTH)
         return res.status(400).json({ error: `Query must be at least ${CONFIG.MIN_SEARCH_LENGTH} characters long.` });
-
-    // Используем fuse.js для нечёткого поиска
-    const fuse = new Fuse(primePartsList, {
-        includeScore: true,
-        threshold: 0.4,          // 0 – строгое совпадение, 1 – всё подходит. 0.4 допускает небольшие опечатки
-        distance: 100,
-    });
-    const result = fuse.search(query);
-    const matched = result.map(r => r.item);
-    const limited = matched.slice(0, CONFIG.MAX_SEARCH_RESULTS);
-    res.json({ count: matched.length, parts: limited });
+    const lower = query.toLowerCase();
+    const matched = primePartsList.filter(p => p.toLowerCase().includes(lower));
+    res.json({ count: matched.length, parts: matched.slice(0, CONFIG.MAX_SEARCH_RESULTS) });
 });
 
 app.get('/api/search-relics', (req, res) => {
     if (!relicRewardsMap.size) return res.status(503).json({ error: 'Relic index not ready.' });
     const query = req.query.q?.trim().toLowerCase() || '';
     if (!query) return res.json({ relics: [] });
-
-    // Превращаем ключи Map в массив
-    const relicNames = Array.from(relicRewardsMap.keys());
-    const fuse = new Fuse(relicNames, {
-        includeScore: true,
-        threshold: 0.4,
-        distance: 100,
-    });
-    const result = fuse.search(query);
-    const matched = result.map(r => r.item);
-    res.json({ relics: matched.slice(0, 50) });
+    const matched = [];
+    for (const relicName of relicRewardsMap.keys()) {
+        if (relicName.toLowerCase().includes(query)) {
+            matched.push(relicName);
+            if (matched.length >= 50) break;
+        }
+    }
+    res.json({ relics: matched });
 });
 
 app.get('/api/relics-for-part', (req, res) => {
