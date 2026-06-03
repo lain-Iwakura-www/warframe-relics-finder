@@ -514,14 +514,15 @@ footer a:hover {
     font-size: 0.9em;
     white-space: nowrap;
 }
-
+                    
 .sort-label select {
+    min-width: 140px;
     background: transparent;
     color: #eee;
     border: none;
     font-size: 0.9em;
     font-weight: bold;
-    padding: 4px 28px 4px 8px;
+    padding: 4px 28px 6px 6px;
     border-radius: 4px;
     cursor: pointer;
     appearance: none;                     /* убираем стандартную стрелку */

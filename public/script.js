@@ -108,6 +108,12 @@ function renderWishlist() {
         sortLabel.appendChild(orderBtn);
 
         wishlistActions.appendChild(sortLabel);
+        const bestRelicsBtn = document.createElement('button');
+        bestRelicsBtn.id = 'findBestRelicsBtn';
+        bestRelicsBtn.textContent = t('findBestRelics');
+        bestRelicsBtn.className = 'wishlist-btn';
+        bestRelicsBtn.addEventListener('click', findBestRelics);
+        wishlistActions.appendChild(bestRelicsBtn);
     }
 
     if (!wishlist.length) {
@@ -400,9 +406,14 @@ function renderRelicTable(data) {
     const btnClass = inWish ? 'wishlist-btn remove' : 'wishlist-btn';
     const setName = data.setName;
 
+    const inWish = isInWishlist(data.part);
+    const inWishSet = setName && isSetInWishlist(setName);
     let wishlistTag = '';
-    if (inWish) wishlistTag = ' ⭐ In wishlist';
-    else if (inAny) wishlistTag = ' 📦 Part of set';
+    if (inWish) {
+        wishlistTag = ' ⭐ In wishlist';
+    } else if (inWishSet) {
+        wishlistTag = ' 📦 In wishlist set';
+    }
 
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
