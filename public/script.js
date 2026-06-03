@@ -162,6 +162,10 @@ function renderWishlist() {
             wishlistItems.appendChild(li);
 
         } else if (item.type === 'set') {
+    // Оборачиваем details и кнопку удаления в общий контейнер
+            const wrapper = document.createElement('div');
+             wrapper.className = 'wishlist-set-wrapper';
+
             const details = document.createElement('details');
             details.className = 'wishlist-set';
             details.dataset.setName = item.name;
@@ -169,23 +173,24 @@ function renderWishlist() {
 
             const summary = document.createElement('summary');
             summary.innerHTML = `<span class="wishlist-set-name">📦 ${escapeHtml(item.name)}</span>`;
+            // Кнопку удаления больше не кладём в summary
+            details.appendChild(summary);
+
+            // Кнопка удаления теперь снаружи details
             const delSet = document.createElement('button');
-            delSet.className = 'delete-btn';
+            delSet.className = 'delete-btn set-delete-btn';
             delSet.innerHTML = '×';
             delSet.title = t('deleteSet');
             delSet.addEventListener('click', (e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 wishlist.splice(originalIndex, 1);
                 saveWishlist(wishlist);
                 renderWishlist();
                 if (currentState?.type === 'set' && currentState.name === item.name) refreshCurrentPage();
-            });
-            const btnWrap = document.createElement('span');
-            btnWrap.className = 'wishlist-set-btns';
-            btnWrap.appendChild(delSet);
-            summary.appendChild(btnWrap);
-            details.appendChild(summary);
+             });
+
+             wrapper.appendChild(details);
+             wrapper.appendChild(delSet);
 
             const partsList = document.createElement('ul');
             partsList.className = 'wishlist-set-parts';
@@ -193,9 +198,7 @@ function renderWishlist() {
                 const pli = document.createElement('li');
                 pli.className = 'wishlist-item';
                 const pcb = document.createElement('input');
-                pcb.type = 'checkbox';
-                pcb.checked = part.obtained;
-                pcb.title = t('owned');
+                pcb.type = 'checkbox'; pcb.checked = part.obtained; pcb.title = t('owned');
                 pcb.addEventListener('change', () => {
                     wishlist[originalIndex].parts[partIndex].obtained = pcb.checked;
                     syncPartObtained(part.name, pcb.checked);
@@ -205,16 +208,12 @@ function renderWishlist() {
                 const pspan = document.createElement('span');
                 pspan.textContent = part.name;
                 if (part.obtained) pspan.classList.add('obtained');
-                pspan.addEventListener('click', () => {
-                    searchInput.value = part.name;
-                    navigateTo({ type: 'part', name: part.name });
-                });
-                pli.appendChild(pcb);
-                pli.appendChild(pspan);
+                pspan.addEventListener('click', () => { searchInput.value = part.name; navigateTo({ type: 'part', name: part.name }); });
+                pli.appendChild(pcb); pli.appendChild(pspan);
                 partsList.appendChild(pli);
             });
             details.appendChild(partsList);
-            wishlistItems.appendChild(details);
+            wishlistItems.appendChild(wrapper);
         }
     });
 }
