@@ -228,6 +228,27 @@
         updateRelicPageButtonsIfNeeded();
     }
 
+    // Инициализация языка
+    document.getElementById('btnEn').addEventListener('click', () => setLanguage('en'));
+    document.getElementById('btnRu').addEventListener('click', () => setLanguage('ru'));
+    applyLanguage();
+    document.querySelector('.disclaimer').textContent = t('disclaimer');
+    document.querySelector('.rarity-disclaimer').textContent = t('rarityDisclaimer');
+    document.getElementById('headerTitle').textContent = t('title');
+
+    function updateResurgenceLink() {
+        const link = document.querySelector('.resurgence-link');
+        if (link) {
+            link.href = currentLang === 'ru' ? 'https://www.warframe.com/ru/prime-resurgence' : 'https://www.warframe.com/prime-resurgence';
+        }
+    }
+    updateResurgenceLink();
+    const originalSetLanguage = setLanguage;
+    setLanguage = function(lang) {
+        originalSetLanguage(lang);
+        updateResurgenceLink();
+    };
+
     function toggleWishlist(type, name, parts = null) {
         if (type === 'part') {
             const ex = wishlist.find(item => item.type === 'part' && item.name === name);

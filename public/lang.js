@@ -115,6 +115,8 @@ const TRANSLATIONS = {
 
 let currentLang = localStorage.getItem('lang') || 'en';
 
+let currentLang = localStorage.getItem('lang') || 'en';
+
 function t(key) {
     return TRANSLATIONS[currentLang]?.[key] || TRANSLATIONS.en[key] || key;
 }
@@ -131,7 +133,6 @@ function applyLanguage() {
     document.title = t('title');
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
     document.querySelector('.wishlist-section h2').textContent = '📋 ' + t('wishlistTitle');
-    // обновим также ссылки и дисклеймер в футере, если они уже загружены
     const disclaimerEl = document.querySelector('.disclaimer');
     if (disclaimerEl) disclaimerEl.textContent = t('disclaimer');
     const rarityEl = document.querySelector('.rarity-disclaimer');
