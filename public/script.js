@@ -402,7 +402,16 @@ function renderRelicTable(data) {
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     const display = data.setName && data.part.startsWith(data.setName + ' ') ? `<a class="set-link">${escapeHtml(data.setName)}</a>${escapeHtml(data.part.slice(data.setName.length))}` : escapeHtml(data.part);
-    html += `<div class="part-info"><h2>${display}</h2><button class="${btnClass}">${btnText}</button></div>`;
+    const hasSeparate = isInWishlist(data.part);
+    const inAny = isPartInAnyWishlist(data.part);
+    let wishlistTag = '';
+    if (hasSeparate) {
+        wishlistTag = ' ⭐ In wishlist';
+    } else if (inAny) {
+        wishlistTag = ' 📦 Part of set';
+    }
+
+    html += `<div class="part-info"><h2>${partDisplay}${wishlistTag}</h2><button class="${btnClass}">${btnText}</button></div>`;
     html += `<div class="rarity-info"><span>${t('rarity')} <strong>${rarity}</strong></span> <span class="chances-summary">(Intact: ${chances.Intact} | Exceptional: ${chances.Exceptional} | Flawless: ${chances.Flawless} | Radiant: ${chances.Radiant})</span> <span class="ducats">| ${ducats} ${t('ducats')}</span><span class="platinum-price">| ${t('platinumNA')}</span></div>`;
     html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnly" checked> ${t('showAvailableOnly')}</label></div>`;
     html += `<table id="relicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th></tr></thead><tbody>`;
@@ -480,35 +489,58 @@ function renderRelicDetails(data) {
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     html += `<div class="relic-info"><h2>${escapeHtml(relicName)}</h2><p>${t('status')}: <span class="${cls}">${status}</span></p></div>`;
-    html += `<table class="rewards-table"><thead><tr><th>${t('reward')}</th><th>${t('rarity')}</th><th>${t('intact')}</th><th>${t('exceptional')}</th><th>${t('flawless')}</th><th>${t('radiant')}</th><th>${t('ducats')}</th><th></th></tr></thead><tbody>`;
+    html += `<table class="rewards-table"><thead><tr>
+        <th>${t('reward')}</th><th>${t('rarity')}</th>
+        <th>${t('intact')}</th><th>${t('exceptional')}</th>
+        <th>${t('flawless')}</th><th>${t('radiant')}</th>
+        <th>${t('ducats')}</th><th></th>
+    </tr></thead><tbody>`;
 
     rewards.forEach(reward => {
         const chances = reward.dropChances;
-        const hasSeparate = isInWishlist(reward.partName);    // отдельная запись
-        const inAny = isPartInAnyWishlist(reward.partName);   // в любом виде
+        const hasSeparate = isInWishlist(reward.partName);
+        const inAny = isPartInAnyWishlist(reward.partName);
+        const obtained = inAny ? getPartObtained(reward.partName) : false;
+        let badge = '';
+        if (inAny) badge = obtained ? ' ✔️' : ' ⭐';
 
         let btnHtml;
         if (hasSeparate) {
             btnHtml = `<button class="wishlist-btn remove" data-part="${escapeHtml(reward.partName)}">❌ Remove</button>`;
         } else if (inAny) {
-             btnHtml = `<button class="wishlist-btn in-set" data-part="${escapeHtml(reward.partName)}" disabled>📦 In set</button>`;
+            btnHtml = `<button class="wishlist-btn in-set" data-part="${escapeHtml(reward.partName)}" disabled>📦 In set</button>`;
         } else {
             btnHtml = `<button class="wishlist-btn" data-part="${escapeHtml(reward.partName)}">➕ Add</button>`;
         }
+
+        html += `<tr>
+            <td class="reward-part" data-part="${escapeHtml(reward.partName)}">${escapeHtml(reward.partName)}${badge}</td>
+            <td>${reward.rarity}</td>
+            <td>${chances.Intact}</td>
+            <td>${chances.Exceptional}</td>
+            <td>${chances.Flawless}</td>
+            <td>${chances.Radiant}</td>
+            <td>${reward.ducats}</td>
+            <td>${btnHtml}</td>
+        </tr>`;
     });
 
     html += `</tbody></table>`;
-    html += `<p class="drop-locations"><a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a></p>`;
+    html += `<p class="drop-locations">
+        <a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> |
+        <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a>
+    </p>`;
     resultsDiv.innerHTML = html;
 
-    document.querySelectorAll('.wishlist-btn').forEach(b => {
+    document.querySelectorAll('.wishlist-btn:not(.in-set)').forEach(b => {
         b.addEventListener('click', (e) => {
-         e.stopPropagation();
-         toggleWishlist('part', b.dataset.part);
-         updateRelicPageButtons(); // вместо перезагрузки всей страницы
+            e.stopPropagation();
+            toggleWishlist('part', b.dataset.part);
         });
     });
-    document.querySelectorAll('.reward-part').forEach(td => td.addEventListener('click', () => navigateTo({ type: 'part', name: td.dataset.part })));
+    document.querySelectorAll('.reward-part').forEach(td => {
+        td.addEventListener('click', () => navigateTo({ type: 'part', name: td.dataset.part }));
+    });
 }
 
 function updateRelicPageButtons() {
