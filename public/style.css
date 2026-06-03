@@ -648,3 +648,33 @@ th, td {
     transform: rotate(90deg);
     color: #e0b0ff;
 }
+/* Унификация кнопок удаления в вишлисте */
+.wishlist-item {
+    position: relative;
+    padding-right: 36px;       /* место под крестик */
+}
+.wishlist-item .delete-btn,
+.wishlist-set-wrapper .set-delete-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Для кнопки удаления набора убираем абсолютное позиционирование внутри wrapper, если не нужно */
+.wishlist-set-wrapper {
+    position: relative;
+}
+.wishlist-set-wrapper .set-delete-btn {
+    position: absolute;
+    right: 8px;
+    top: 12px;                /* чуть ниже, так как высота summary другая */
+    transform: none;
+}

@@ -469,11 +469,11 @@ function renderRelicDetails(data) {
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     html += `<div class="relic-info"><h2>${escapeHtml(relicName)}</h2><p>${t('status')}: <span class="${cls}">${status}</span></p></div>`;
     html += `<table class="rewards-table"><thead><tr><th>${t('reward')}</th><th>${t('rarity')}</th><th>${t('intact')}</th><th>${t('exceptional')}</th><th>${t('flawless')}</th><th>${t('radiant')}</th><th>${t('ducats')}</th><th></th></tr></thead><tbody>`;
-    
-    rewards.forEach(reward => {   // <-- reward объявлен здесь
+
+    rewards.forEach(reward => {
         const chances = reward.dropChances;
-        const inWish = isInWishlist(reward.partName);
-        const obtained = inWishlist ? getPartObtained(reward.partName) : false;
+        const inWish = isInWishlist(reward.partName);          // <-- переименовано в inWish для ясности
+        const obtained = inWish ? getPartObtained(reward.partName) : false;
         let badge = '';
         if (inWish) badge = obtained ? ' ✔️' : ' ⭐';
         html += `<tr>
@@ -487,7 +487,7 @@ function renderRelicDetails(data) {
             <td><button class="wishlist-btn ${inWish ? 'remove' : ''}" data-part="${escapeHtml(reward.partName)}">${inWish ? '❌ Remove' : '➕ Add'}</button></td>
         </tr>`;
     });
-    
+
     html += `</tbody></table>`;
     html += `<p class="drop-locations"><a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a></p>`;
     resultsDiv.innerHTML = html;
