@@ -240,6 +240,7 @@ function toggleWishlist(type, name, parts = null) {
 
 // ================== FIND BEST RELICS ==================
 async function findBestRelics() {
+    currentState = null;
     const partNames = [];
     wishlist.forEach(item => {
         if (item.type === 'part' && !item.obtained && item.name) partNames.push(item.name);
