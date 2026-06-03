@@ -80,7 +80,7 @@ const TRANSLATIONS = {
         removeSet: '❌ Убрать набор',
         rarity: 'Редкость:',
         ducats: 'Дукатов',
-        platinumNA: 'Платина N/A',
+        platinumNA: '',
         showAvailableOnly: 'Только доступные',
         relic: 'Реликвия',
         status: 'Статус',
@@ -112,8 +112,6 @@ const TRANSLATIONS = {
         rarityDisclaimer: 'Данные о редкости взяты из @wfcd/items и могут содержать неточности.',
     }
 };
-
-let currentLang = localStorage.getItem('lang') || 'en';
 
 let currentLang = localStorage.getItem('lang') || 'en';
 
