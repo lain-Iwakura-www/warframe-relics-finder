@@ -192,24 +192,24 @@ h1 {
 
 /* Таблицы */
 table {
-    table-layout: auto;
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
     background: rgba(0,0,0,0.2);
     border-radius: 8px;
     overflow: hidden;
-    /* Убираем word-break: break-word, если было */
-    hyphens: manual;           /* запрещаем автоматический перенос */
+    /* Убираем возможный горизонтальный скролл у самой таблицы */
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;   /* <-- оставляем для самой таблицы, но для ячеек разрешим перенос */
 }
 
 th, td {
     padding: 10px 8px;
     border-bottom: 1px solid rgba(42,42,74,0.8);
     text-align: center;
-    white-space: nowrap;       /* сначала пробуем не переносить */
-    overflow-wrap: break-word; /* разрешаем перенос только если слово шире ячейки */
-    word-break: normal;        /* отключаем разрыв по слогам */
+    white-space: normal;   /* разрешаем перенос текста в ячейках */
+    word-break: break-word; /* перенос длинных слов */
 }
 
 th {
@@ -688,4 +688,8 @@ th, td {
     background: #3a3a5a;
     transform: none;
     box-shadow: none;
+}
+.results-section {
+    min-height: 120px;
+    transition: min-height 0.2s ease;
 }
