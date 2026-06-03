@@ -703,3 +703,18 @@ th, td {
 .sort-order-btn:hover {
     background: #2a2a4a;
 }
+.filter-row {
+    margin-top: 10px;
+}
+.sort-order-btn {
+    background: transparent;
+    border: none;
+    color: #eee;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+.sort-order-btn:hover {
+    color: #e0b0ff;
+}

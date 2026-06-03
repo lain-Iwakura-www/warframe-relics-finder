@@ -90,36 +90,25 @@ function renderWishlist() {
         const sortLabel = document.createElement('label');
         sortLabel.textContent = t('sort') + ' ';
         sortLabel.className = 'sort-label';
+
         const sortSelect = document.createElement('select');
-        sortSelect.innerHTML = `
-            <option value="added" ${wishlistSort === 'added' ? 'selected' : ''}>${t('sortAdded')}</option>
-            <option value="name" ${wishlistSort === 'name' ? 'selected' : ''}>${t('sortName')}</option>
-            <option value="obtained" ${wishlistSort === 'obtained' ? 'selected' : ''}>${t('sortObtained')}</option>`;
-        sortSelect.addEventListener('change', (e) => {
-            wishlistSort = e.target.value;
+        sortSelect.innerHTML = `...`; // без изменений
+        sortLabel.appendChild(sortSelect);
+
+        // Кнопка направления внутри того же label
+        const orderBtn = document.createElement('button');
+        orderBtn.id = 'sortOrderBtn';
+        orderBtn.textContent = wishlistOrder === 'asc' ? '↑' : '↓';
+        orderBtn.title = wishlistOrder === 'asc' ? 'Ascending' : 'Descending';
+        orderBtn.className = 'sort-order-btn';
+        orderBtn.addEventListener('click', () => {
+            wishlistOrder = wishlistOrder === 'asc' ? 'desc' : 'asc';
             renderWishlist();
         });
-        sortLabel.appendChild(sortSelect);
-        wishlistActions.appendChild(sortLabel);
+        sortLabel.appendChild(orderBtn);
 
-        const bestRelicsBtn = document.createElement('button');
-        bestRelicsBtn.id = 'findBestRelicsBtn';
-        bestRelicsBtn.textContent = t('findBestRelics');
-        bestRelicsBtn.className = 'wishlist-btn';
-        bestRelicsBtn.addEventListener('click', findBestRelics);
-        wishlistActions.appendChild(bestRelicsBtn);
+        wishlistActions.appendChild(sortLabel);
     }
-        // Кнопка направления сортировки
-    const orderBtn = document.createElement('button');
-    orderBtn.id = 'sortOrderBtn';
-    orderBtn.textContent = wishlistOrder === 'asc' ? '↑' : '↓';
-    orderBtn.title = wishlistOrder === 'asc' ? 'Sort ascending' : 'Sort descending';
-    orderBtn.className = 'sort-order-btn';
-    orderBtn.addEventListener('click', () => {
-        wishlistOrder = wishlistOrder === 'asc' ? 'desc' : 'asc';
-        renderWishlist();
-    });
-    wishlistActions.appendChild(orderBtn);
 
     if (!wishlist.length) {
         wishlistItems.innerHTML = `<li class="empty">${t('nothingAdded')}</li>`;
@@ -204,6 +193,8 @@ function renderWishlist() {
             });
         }
     });
+    if (wishlistOrder === 'desc') sorted.reverse();
+    return sorted;
 
     // Автообновление страницы набора, если она открыта
     if (currentState && currentState.type === 'set') {
@@ -588,3 +579,4 @@ setLanguage = function(lang) {
 };
 
 renderWishlist();
+console.log('Requesting optimal relics for:', uniqueParts);
