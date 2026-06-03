@@ -393,7 +393,7 @@ function renderRelicTable(data) {
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     const display = setName && data.part.startsWith(setName + ' ') ? `<a class="set-link">${escapeHtml(setName)}</a>${escapeHtml(data.part.slice(setName.length))}` : escapeHtml(data.part);
     html += `<div class="part-info"><h2>${display}${wishlistTag}</h2><button class="${btnClass}">${btnText}</button></div>`;
-    html += `<div class="rarity-info"><span>${t('rarity')} <strong>${rarity}</strong></span> <span class="chances-summary">(Intact: ${chances.Intact} | Exceptional: ${chances.Exceptional} | Flawless: ${chances.Flawless} | Radiant: ${chances.Radiant})</span> <span class="ducats">| ${ducats} ${t('ducats')}</span><span class="platinum-price">| ${t('platinumNA')}</span></div>`;
+    html += `<div class="rarity-info"><span>${t('rarity')} <strong>${rarity}</strong></span> <span class="chances-summary">(Intact: ${chances.Intact} | Exceptional: ${chances.Exceptional} | Flawless: ${chances.Flawless} | Radiant: ${chances.Radiant})</span> <span class="ducats">| ${ducats} ${t('ducats')}</span></div>`;
     html += `<div class="filter-row"><label><input type="checkbox" id="showAvailableOnly" checked> ${t('showAvailableOnly')}</label></div>`;
     html += `<table id="relicsTable"><thead><tr><th>${t('relic')}</th><th>${t('status')}</th></tr></thead><tbody>`;
     unique.forEach(r => {

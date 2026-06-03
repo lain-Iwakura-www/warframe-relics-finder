@@ -197,9 +197,6 @@ table {
     margin-top: 10px;
     background: rgba(0,0,0,0.2);
     border-radius: 8px;
-    overflow: hidden;
-    /* Убираем возможный горизонтальный скролл у самой таблицы */
-    display: block;
     overflow-x: auto;
     white-space: nowrap;   /* <-- оставляем для самой таблицы, но для ячеек разрешим перенос */
 }
