@@ -437,10 +437,9 @@ async function loadRelicDetails(relicName) {
             resultsDiv.innerHTML = `<p class="error">${t('error')} ${resp.status}</p>`;
             return;
         }
-        // Проверяем, есть ли тело ответа (статус 304 может дать пустое тело)
         const text = await resp.text();
         if (!text) {
-            // Кэш пуст – пробуем ещё раз без кэша (на всякий случай)
+            // Пустой ответ – повторяем без кэша
             const freshResp = await fetch(`${RELIC_DETAILS_URL}?relic=${encodeURIComponent(base)}`, { cache: 'no-store' });
             if (!freshResp.ok) {
                 resultsDiv.innerHTML = `<p class="error">${t('error')} ${freshResp.status}</p>`;
@@ -460,24 +459,31 @@ async function loadRelicDetails(relicName) {
 
 function renderRelicDetails(data) {
     const { relicName, isVaulted, rewards } = data;
-    const status = (isVaulted ? t('vaulted') : t('available'));
-    const cls = (isVaulted ? 'vaulted' : 'not-vaulted');
+    const status = isVaulted ? t('vaulted') : t('available');
+    const cls = isVaulted ? 'vaulted' : 'not-vaulted';
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     html += `<div class="relic-info"><h2>${escapeHtml(relicName)}</h2><p>${t('status')}: <span class="${cls}">${status}</span></p></div>`;
     html += `<table class="rewards-table"><thead><tr><th>${t('reward')}</th><th>${t('rarity')}</th><th>${t('intact')}</th><th>${t('exceptional')}</th><th>${t('flawless')}</th><th>${t('radiant')}</th><th>${t('ducats')}</th><th></th></tr></thead><tbody>`;
-    rewards.forEach(r => {
-        const ch = r.dropChances;
-        const inWish = isInWishlist(r.partName);
-        const inWishlist = isInWishlist(reward.partName);
-        const isObtained = inWishlist ? getPartObtained(reward.partName) : false;
+    
+    rewards.forEach(reward => {   // <-- reward объявлен здесь
+        const chances = reward.dropChances;
+        const inWish = isInWishlist(reward.partName);
+        const obtained = inWish ? getPartObtained(reward.partName) : false;
         let badge = '';
-            if (inWishlist) {
-                badge = isObtained ? ' ✔️' : ' ⭐';
-            }
+        if (inWish) badge = obtained ? ' ✔️' : ' ⭐';
         html += `<tr>
-    <td class="reward-part" data-part="${escapeHtml(reward.partName)}">${escapeHtml(reward.partName)}${badge}</td><td>${r.rarity}</td><td>${ch.Intact}</td><td>${ch.Exceptional}</td><td>${ch.Flawless}</td><td>${ch.Radiant}</td><td>${r.ducats}</td><td><button class="wishlist-btn ${inWish ? 'remove' : ''}" data-part="${escapeHtml(r.partName)}">${inWish ? '❌ Remove' : '➕ Add'}</button></td></tr>`;
+            <td class="reward-part" data-part="${escapeHtml(reward.partName)}">${escapeHtml(reward.partName)}${badge}</td>
+            <td>${reward.rarity}</td>
+            <td>${chances.Intact}</td>
+            <td>${chances.Exceptional}</td>
+            <td>${chances.Flawless}</td>
+            <td>${chances.Radiant}</td>
+            <td>${reward.ducats}</td>
+            <td><button class="wishlist-btn ${inWish ? 'remove' : ''}" data-part="${escapeHtml(reward.partName)}">${inWish ? '❌ Remove' : '➕ Add'}</button></td>
+        </tr>`;
     });
+    
     html += `</tbody></table>`;
     html += `<p class="drop-locations"><a href="https://warframe.fandom.com/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchEnWiki')}</a> | <a href="https://warframe.fandom.com/ru/wiki/Special:Search?query=${encodeURIComponent(relicName)}" target="_blank">${t('searchRuWiki')}</a></p>`;
     resultsDiv.innerHTML = html;
