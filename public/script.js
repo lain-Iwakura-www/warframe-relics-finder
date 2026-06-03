@@ -181,6 +181,15 @@ function renderWishlist() {
             summary.innerHTML = `<span class="wishlist-set-name">📦 ${escapeHtml(item.name)}</span>`;
             // Кнопку удаления больше не кладём в summary
             details.appendChild(summary);
+            // Клик по названию набора → переход на страницу набора
+            const nameSpan = summary.querySelector('.wishlist-set-name');
+            if (nameSpan) {
+                nameSpan.style.cursor = 'pointer';
+                nameSpan.addEventListener('click', (e) => {
+                    e.stopPropagation();        // не даём details переключиться
+                    navigateTo({ type: 'set', name: item.name });
+                });
+            }
             // Кликабельное название набора
             const nameSpan = summary.querySelector('.wishlist-set-name');
             if (nameSpan) {
@@ -232,6 +241,9 @@ function renderWishlist() {
         }
     });
     updateRelicPageButtonsIfNeeded();
+    if (currentState && currentState.type === 'set') {
+        loadSetPage(currentState.name);
+    }
 }
 
 function toggleWishlist(type, name, parts = null) {
@@ -366,21 +378,38 @@ async function loadSetPage(setName) {
 
 function renderSetPage(data) {
     const { setName, parts } = data;
-    const inList = isSetInWishlist(setName);
-    const btnText = inList ? t('removeSet') : t('addSet');
-    const btnClass = inList ? 'wishlist-btn remove' : 'wishlist-btn';
+    const setInWishlist = isSetInWishlist(setName);
+    const btnText = setInWishlist ? t('removeSet') : t('addSet');
+    const btnClass = setInWishlist ? 'wishlist-btn remove' : 'wishlist-btn';
+
     let html = '';
     if (historyStack.length > 0) html += `<button class="back-btn" onclick="goBack()">${t('back')}</button>`;
     html += `<div class="set-info"><h2>📦 ${escapeHtml(setName)}</h2><button class="${btnClass}" id="toggleSetBtn">${btnText}</button></div>`;
-    html += `<table class="set-table"><thead><tr><th>${t('part')}</th><th>${t('rarity')}${t('rarity') ? '' : ''}</th><th>${t('relics')}</th><th>${t('ducats')}</th></tr></thead><tbody>`;
+
+    html += `<table class="set-table"><thead><tr>
+        <th>${t('part')}</th><th>${t('rarity')}</th><th>${t('relics')}</th><th>${t('ducats')}</th>
+    </tr></thead><tbody>`;
+
     parts.forEach(part => {
-        part.obtained = getPartObtained(part.name);
-        parts.forEach(p => html += `<tr><td><a class="part-link" data-part="${escapeHtml(p.name)}">${escapeHtml(part.name)}${part.obtained ? ' ✔️' : ''}</a></td><td>${p.relicCount}</td><td>${p.ducats}</td></tr>`);
+        const obtained = getPartObtained(part.name);
+        const obtainedIcon = obtained ? ' ✔️' : '';
+        html += `<tr>
+            <td><a class="part-link" data-part="${escapeHtml(part.name)}">${escapeHtml(part.name)}${obtainedIcon}</a></td>
+            <td>${part.rarity}</td>
+            <td>${part.relicCount}</td>
+            <td>${part.ducats}</td>
+        </tr>`;
     });
+
     html += `</tbody></table>`;
     resultsDiv.innerHTML = html;
-    document.getElementById('toggleSetBtn').addEventListener('click', () => toggleWishlist('set', setName, parts));
-    document.querySelectorAll('.part-link').forEach(l => l.addEventListener('click', () => navigateTo({ type: 'part', name: l.dataset.part })));
+
+    document.getElementById('toggleSetBtn').addEventListener('click', () => {
+        toggleWishlist('set', setName, parts);
+    });
+    document.querySelectorAll('.part-link').forEach(link => {
+        link.addEventListener('click', () => navigateTo({ type: 'part', name: link.dataset.part }));
+    });
 }
 
 // ================== PART PAGE ==================
