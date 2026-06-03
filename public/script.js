@@ -128,6 +128,9 @@ function renderWishlist() {
         return;
     }
 
+    const wishlistHeight = wishlistItems.offsetHeight;
+    wishlistItems.style.minHeight = wishlistHeight + 'px';
+
     const sorted = sortWishlist(wishlist);
     wishlistItems.innerHTML = '';
 
@@ -215,6 +218,7 @@ function renderWishlist() {
     if (currentState && currentState.type === 'relic') {
         loadRelicDetails(currentState.name);
     }
+     wishlistItems.style.minHeight = '';
 }
 
 function toggleWishlist(type, name, parts = null) {
@@ -240,6 +244,9 @@ function toggleWishlist(type, name, parts = null) {
 
 // ================== FIND BEST RELICS ==================
 async function findBestRelics() {
+     const currentHeight = resultsDiv.offsetHeight;
+    resultsDiv.style.minHeight = currentHeight + 'px';
+    
     currentState = null;
     const partNames = [];
     wishlist.forEach(item => {
@@ -259,6 +266,7 @@ async function findBestRelics() {
         if (!data.relics || data.relics.length === 0) { resultsDiv.innerHTML = `<p>${t('partNotFound')}</p>`; return; }
         renderBestRelics(data.relics);
     } catch (err) { console.error(err); resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
+        resultsDiv.style.minHeight = '';
 }
 
 function renderBestRelics(relics) {
@@ -344,12 +352,16 @@ function hideSuggestions() { suggestionsList.classList.remove('visible'); }
 
 // ================== SET PAGE ==================
 async function loadSetPage(setName) {
+    const currentHeight = resultsDiv.offsetHeight;
+    resultsDiv.style.minHeight = currentHeight + 'px';
+    
     resultsDiv.innerHTML = `<p>${t('loadingSet')}</p>`;
     try {
         const resp = await fetch(`${SETS_URL}?name=${encodeURIComponent(setName)}`);
         if (!resp.ok) { resultsDiv.innerHTML = `<p class="error">${t('setNotFound')}</p>`; return; }
         renderSetPage(await resp.json());
     } catch (e) { resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
+         resultsDiv.style.minHeight = '';
 }
 
 function renderSetPage(data) {
@@ -385,6 +397,9 @@ function renderSetPage(data) {
 
 // ================== PART PAGE ==================
 async function loadRelics(partName) {
+    const currentHeight = resultsDiv.offsetHeight;
+    resultsDiv.style.minHeight = currentHeight + 'px';
+    
     resultsDiv.innerHTML = `<p>${t('loadingPart')}</p>`;
     try {
         const resp = await fetch(`${RELICS_URL}?part=${encodeURIComponent(partName)}`);
@@ -393,6 +408,7 @@ async function loadRelics(partName) {
         if (!data.relics.length) { resultsDiv.innerHTML = `<p>${t('partNotFound')}</p>`; return; }
         renderRelicTable(data);
     } catch (e) { resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
+        resultsDiv.style.minHeight = '';    
 }
 
 function renderRelicTable(data) {
@@ -457,6 +473,9 @@ function renderRelicTable(data) {
 
 // ================== RELIC PAGE ==================
 async function loadRelicDetails(relicName) {
+    const currentHeight = resultsDiv.offsetHeight;
+    resultsDiv.style.minHeight = currentHeight + 'px';
+    
     const base = relicName.replace(/ (Intact|Exceptional|Flawless|Radiant)$/, '');
     resultsDiv.innerHTML = `<p>${t('loadingRelic')}</p>`;
     try {
@@ -465,6 +484,7 @@ async function loadRelicDetails(relicName) {
         const data = await resp.json();
         renderRelicDetails(data);
     } catch (e) { resultsDiv.innerHTML = `<p class="error">${t('error')}</p>`; }
+        resultsDiv.style.minHeight = '';
 }
 
 function renderRelicDetails(data) {

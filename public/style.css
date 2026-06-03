@@ -514,7 +514,7 @@ footer a:hover {
     font-size: 0.9em;
     white-space: nowrap;
 }
-                    
+
 .sort-label select {
     min-width: 140px;
     background: transparent;
@@ -718,4 +718,7 @@ th, td {
 }
 .sort-order-btn:hover {
     color: #e0b0ff;
+}
+#results, #wishlist-items {
+    transition: min-height 0.2s ease;
 }
