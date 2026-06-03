@@ -1,4 +1,3 @@
-let wishlistOrder = 'asc'; // 'asc' или 'desc'
 const SEARCH_URL = '/api/search';
 const RELIC_SEARCH_URL = '/api/search-relics';
 const SETS_SEARCH_URL = '/api/search-sets';
@@ -16,6 +15,7 @@ const wishlistActions = document.getElementById('wishlist-actions');
 let currentState = null;
 const historyStack = [];
 let wishlistSort = 'added';
+let wishlistOrder = 'asc';
 
 // ================== WISHLIST ==================
 function loadWishlist() {
@@ -72,12 +72,10 @@ function sortWishlist(list) {
             const bOb = (b.type === 'part') ? (b.obtained ? 1 : 0) : b.parts.filter(p => p.obtained).length;
             return aOb - bOb;
         });
-    if (wishlistOrder === 'desc') sorted.reverse();
-        return sorted;
     }
+    if (wishlistOrder === 'desc') sorted.reverse();
     return sorted;
 }
-
 
 function renderWishlist() {
     const openSets = new Set();
@@ -90,12 +88,18 @@ function renderWishlist() {
         const sortLabel = document.createElement('label');
         sortLabel.textContent = t('sort') + ' ';
         sortLabel.className = 'sort-label';
-
         const sortSelect = document.createElement('select');
-        sortSelect.innerHTML = `...`; // без изменений
+        sortSelect.innerHTML = `
+            <option value="added" ${wishlistSort === 'added' ? 'selected' : ''}>${t('sortAdded')}</option>
+            <option value="name" ${wishlistSort === 'name' ? 'selected' : ''}>${t('sortName')}</option>
+            <option value="obtained" ${wishlistSort === 'obtained' ? 'selected' : ''}>${t('sortObtained')}</option>`;
+        sortSelect.addEventListener('change', (e) => {
+            wishlistSort = e.target.value;
+            renderWishlist();
+        });
         sortLabel.appendChild(sortSelect);
 
-        // Кнопка направления внутри того же label
+        // Кнопка направления сортировки
         const orderBtn = document.createElement('button');
         orderBtn.id = 'sortOrderBtn';
         orderBtn.textContent = wishlistOrder === 'asc' ? '↑' : '↓';
@@ -108,6 +112,7 @@ function renderWishlist() {
         sortLabel.appendChild(orderBtn);
 
         wishlistActions.appendChild(sortLabel);
+
         const bestRelicsBtn = document.createElement('button');
         bestRelicsBtn.id = 'findBestRelicsBtn';
         bestRelicsBtn.textContent = t('findBestRelics');
@@ -120,13 +125,6 @@ function renderWishlist() {
         wishlistItems.innerHTML = `<li class="empty">${t('nothingAdded')}</li>`;
         return;
     }
-
-    const bestRelicsBtn = document.createElement('button');
-    bestRelicsBtn.id = 'findBestRelicsBtn';
-    bestRelicsBtn.textContent = t('findBestRelics');
-    bestRelicsBtn.className = 'wishlist-btn';
-    bestRelicsBtn.addEventListener('click', findBestRelics);
-    wishlistActions.appendChild(bestRelicsBtn);
 
     const sorted = sortWishlist(wishlist);
     wishlistItems.innerHTML = '';
@@ -197,23 +195,21 @@ function renderWishlist() {
             details.appendChild(partsList);
             wishlistItems.appendChild(wrapper);
 
-            // Кликабельное название набора
+            // Клик по названию набора → переход на страницу набора
             summary.addEventListener('click', (e) => {
                 if (e.target.closest('.wishlist-set-name')) {
-                    e.preventDefault();   // чтобы details не переключался
+                    e.preventDefault();
                     navigateTo({ type: 'set', name: item.name });
                 }
             });
         }
     });
-    if (wishlistOrder === 'desc') sorted.reverse();
-    return sorted;
 
     // Автообновление страницы набора, если она открыта
     if (currentState && currentState.type === 'set') {
         loadSetPage(currentState.name);
     }
-        // Автообновление страницы реликвии, если она открыта
+    // Автообновление страницы реликвии, если она открыта
     if (currentState && currentState.type === 'relic') {
         loadRelicDetails(currentState.name);
     }
@@ -275,7 +271,6 @@ function renderBestRelics(relics) {
     });
     html += `</tbody></table>`;
     resultsDiv.innerHTML = html;
-    // Автоприменение фильтра «доступные только»
     const filterCheckbox = document.getElementById('showAvailableOnlyBest');
     if (filterCheckbox && filterCheckbox.checked) {
         document.querySelectorAll('#bestRelicsTable tbody tr').forEach(row => {
@@ -407,12 +402,12 @@ function renderRelicTable(data) {
     const rarity = data.rarity || 'Common';
     const chances = unique[0]?.dropChances || {};
     const ducats = data.ducats || 0;
-    const inAny = isPartInAnyWishlist(data.part);
-    const btnText = inWish ? t('removeFromWishlist') : t('addToWishlist');
-    const btnClass = inWish ? 'wishlist-btn remove' : 'wishlist-btn';
     const inWish = isInWishlist(data.part);
     const setName = data.setName;
     const inWishSet = setName && isSetInWishlist(setName);
+    const btnText = inWish ? t('removeFromWishlist') : t('addToWishlist');
+    const btnClass = inWish ? 'wishlist-btn remove' : 'wishlist-btn';
+
     let wishlistTag = '';
     if (inWish) {
         wishlistTag = ' ⭐ In wishlist';
@@ -595,4 +590,3 @@ setLanguage = function(lang) {
 };
 
 renderWishlist();
-console.log('Requesting optimal relics for:', uniqueParts);
