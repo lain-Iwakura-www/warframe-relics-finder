@@ -121,6 +121,13 @@ function renderWishlist() {
         return;
     }
 
+    const bestRelicsBtn = document.createElement('button');
+    bestRelicsBtn.id = 'findBestRelicsBtn';
+    bestRelicsBtn.textContent = t('findBestRelics');
+    bestRelicsBtn.className = 'wishlist-btn';
+    bestRelicsBtn.addEventListener('click', findBestRelics);
+    wishlistActions.appendChild(bestRelicsBtn);
+
     const sorted = sortWishlist(wishlist);
     wishlistItems.innerHTML = '';
 
@@ -400,13 +407,11 @@ function renderRelicTable(data) {
     const rarity = data.rarity || 'Common';
     const chances = unique[0]?.dropChances || {};
     const ducats = data.ducats || 0;
-    const inWish = isInWishlist(data.part);
     const inAny = isPartInAnyWishlist(data.part);
     const btnText = inWish ? t('removeFromWishlist') : t('addToWishlist');
     const btnClass = inWish ? 'wishlist-btn remove' : 'wishlist-btn';
-    const setName = data.setName;
-
     const inWish = isInWishlist(data.part);
+    const setName = data.setName;
     const inWishSet = setName && isSetInWishlist(setName);
     let wishlistTag = '';
     if (inWish) {
