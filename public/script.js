@@ -181,14 +181,12 @@ function renderWishlist() {
             wishlistItems.appendChild(wrapper);
 
             // Кликабельное название набора
-            const nameSpan = summary.querySelector('.wishlist-set-name');
-            if (nameSpan) {
-                nameSpan.style.cursor = 'pointer';
-                nameSpan.addEventListener('click', (e) => {
-                    e.stopPropagation();
+            summary.addEventListener('click', (e) => {
+                if (e.target.closest('.wishlist-set-name')) {
+                    e.preventDefault();   // чтобы details не переключался
                     navigateTo({ type: 'set', name: item.name });
-                });
-            }
+                }
+            });
         }
     });
 
