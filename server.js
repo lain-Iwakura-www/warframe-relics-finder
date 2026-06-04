@@ -287,7 +287,7 @@ app.post('/api/optimal-relics', (req, res) => {
         return a.relic.localeCompare(b.relic);
     });
 
-    res.json({ relics: result.slice(0, 50) });
+    res.json({ relics: result.slice(0, 300) });
 });
 
 async function initializeAndStart(attempt = 0) {
